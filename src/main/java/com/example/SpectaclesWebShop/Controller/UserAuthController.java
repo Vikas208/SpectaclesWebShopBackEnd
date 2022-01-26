@@ -1,5 +1,8 @@
 package com.example.SpectaclesWebShop.Controller;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+
 import com.example.SpectaclesWebShop.Bean.Login;
 import com.example.SpectaclesWebShop.Helper.EmailService;
 import com.example.SpectaclesWebShop.ServerResponse.OtpResponse;
@@ -9,7 +12,7 @@ import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.Helper.JwtUtil;
 import com.example.SpectaclesWebShop.Service.CustomeUserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -19,18 +22,18 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/user")
-public class UserLoginController {
+@RequestMapping("/api/user")
+public class UserAuthController {
     @Autowired
     LoginDao loginDao;
 
-    // FOR AUTHENTICATE THE USER
+    // authenticate user
     @Autowired
     AuthenticationManager authenticationManager;
-    // Load User
+    // load user
     @Autowired
     private CustomeUserDetailService customeUserDetailService;
-    // JWT CLASS OBJECT FOR GENERATING TOKEN
+    // generate token
     @Autowired
     JwtUtil jwtUtil;
 
@@ -39,18 +42,24 @@ public class UserLoginController {
 
     // Register an User
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Login l) {
+    public ResponseEntity<?> register(@RequestBody Login l, HttpServletResponse response) {
         try {
             int res = loginDao.SaveData(l);
             if (res == Code.DUPLICATE_KEY) {
-                return ResponseEntity.ok(new ServerResponse("Mail ID Is Registered Already", false));
-            } else if (res >= 1) {
+                return ResponseEntity.ok(new ServerResponse("Account is Registered Already", false));
+            } else if (res == 1) {
                 UserDetails userDetails = this.customeUserDetailService.loadUserByUsername(l.getMailId());
                 String token = this.jwtUtil.generateToken(userDetails);
-                // System.out.println("Token " + token);
-                HttpHeaders headers = new HttpHeaders();
-                headers.add("Authorization", "Bearer " + token);
-                return ResponseEntity.ok().headers(headers)
+
+                // set cookies
+                String tString = "Bearer" + token;
+                Cookie cookie = new Cookie("token", tString);
+                cookie.setMaxAge(7 * 24 * 60 * 60);
+                cookie.setHttpOnly(true);
+                cookie.setPath("/");
+                response.addCookie(cookie);
+
+                return ResponseEntity.ok()
                         .body(new ServerResponse(token, "Register Successfully", true));
             }
         } catch (Exception e) {
@@ -59,31 +68,39 @@ public class UserLoginController {
         return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
     }
 
-    // Login API
+    // Login
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody Login login) {
+    public ResponseEntity<?> loginUser(@RequestBody Login login, HttpServletResponse response) {
         try {
+
             // System.out.println(login.getMailId() + " " + login.getPassword());
             int res = authenticate(login.getMailId(), login.getPassword());
             // System.out.println(res);
             if (res == Code.USER_NOT_EXIST) {
                 return ResponseEntity.status(401).body(new ServerResponse("Bad Credentials", false));
             } else if (res == Code.SUCCESS) {
+                String userName = loginDao.getUserName(login.getMailId());
                 UserDetails userDetails = this.customeUserDetailService.loadUserByUsername(login.getMailId());
                 String token = this.jwtUtil.generateToken(userDetails);
-                // System.out.println("Token " + token);
-                HttpHeaders headers = new HttpHeaders();
-                headers.add("Authorization", "Bearer " + token);
-                return ResponseEntity.ok().headers(headers).body(new ServerResponse(token, "Login Successfully", true));
+                // set Cookies
+                String tString = "Bearer" + token;
+                Cookie cookie = new Cookie("token", tString);
+                cookie.setMaxAge(7 * 24 * 60 * 60);
+                cookie.setHttpOnly(true);
+                cookie.setPath("/");
+                response.addCookie(cookie);
+
+                return ResponseEntity.ok()
+                        .body(new ServerResponse(token, userName, "Login Successfully", true));
             }
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("Login Controller " + e.toString());
         }
         return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
     }
 
     // Authentication Function Check User is Valid or not
-    private int authenticate(String mailId, String password) throws Exception {
+    int authenticate(String mailId, String password) throws Exception {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(mailId, password));
         } catch (BadCredentialsException | UsernameNotFoundException e) {
@@ -96,6 +113,7 @@ public class UserLoginController {
         return Code.SUCCESS;
     }
 
+    // sent otp api
     @PostMapping("/sendMail")
     public ResponseEntity<?> sendMail(@RequestParam String mail) {
         try {
@@ -109,30 +127,29 @@ public class UserLoginController {
         return ResponseEntity.internalServerError().body(new ServerResponse("Mail Not Sent", false));
     }
 
+    // forgot password opt api
     @PostMapping("/forgotPassword")
     public ResponseEntity<?> forgotPassword(@RequestParam String mail) {
+
         try {
             Login login = loginDao.findByMailId(mail);
             if (login == null || login.getMailId() == null) {
-                return ResponseEntity.status(401).body(new ServerResponse("Mail id not found in database", false));
+                return ResponseEntity.status(401).body(new ServerResponse("Bad Credentials", false));
             }
-            OtpResponse otpResponse = emailService.sendMail(mail);
-            if (otpResponse.isSuccess()) {
-                return ResponseEntity.ok(otpResponse);
-            }
-
+            return sendMail(mail);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return ResponseEntity.internalServerError().body(new ServerResponse("Mail Not Sent", false));
     }
 
-    @PostMapping("/resetPassword")
+    // reset password api
+    @PutMapping("/resetPassword")
     public ResponseEntity<?> resetPassword(@RequestBody Login login) {
         try {
             Login l = loginDao.findByMailId(login.getMailId());
             if (l == null || l.getMailId() == null) {
-                return ResponseEntity.status(401).body(new ServerResponse("Mail Id Not Found in DataBase", false));
+                return ResponseEntity.status(401).body(new ServerResponse("Bad Credentials", false));
             }
             int result = loginDao.UpdatePassword(login);
             System.out.println(result);
@@ -140,10 +157,26 @@ public class UserLoginController {
                 return ResponseEntity.ok(new ServerResponse("Password Update", true));
             else
                 return ResponseEntity.status(403)
-                        .body(new ServerResponse("Something is wrong please try again later", false));
+                        .body(new ServerResponse("Something is wrong", false));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+    }
+
+    // Logout
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        try {
+            Cookie cookie = new Cookie("token", "");
+            cookie.setMaxAge(0);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            response.addCookie(cookie);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

@@ -4,7 +4,7 @@ import com.example.SpectaclesWebShop.Bean.Login;
 import com.example.SpectaclesWebShop.CodeName.Code;
 import com.example.SpectaclesWebShop.DaoInterfaces.LoginInterface;
 import com.example.SpectaclesWebShop.CodeName.TableName;
-import com.example.SpectaclesWebShop.RawMapperImplement.RawMapperImple;
+import com.example.SpectaclesWebShop.RawMapperImplement.LoginRaw.LoginRawMapperImple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -83,27 +83,23 @@ public class LoginDao implements LoginInterface {
     }
 
     @Override
-    public int getUser(Login details) {
+    public String getUserName(String MailId) {
         try {
-            String query = "SELECT * FROM " + TableName.LOGIN_TABLE + " WHERE MAILID=? AND PASSWORD=?";
-            RowMapper<Login> login = new RawMapperImple();
-            Login l = jdbcTemplate.queryForObject(query, login, details.getMailId(), details.getPassword());
-            return 1;
-        } catch (EmptyResultDataAccessException e) {
-            if (e.getActualSize() == 0) {
-                return 0;
-            }
+            String query = "SELECT NAME FROM " + TableName.LOGIN_TABLE + " WHERE MAILID=?";
+            String result = jdbcTemplate.queryForObject(query, String.class, MailId);
+            // System.out.println(result);
+            return result;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return Code.ERROR_CODE;
+        return null;
     }
 
     @Override
     public List<Login> getAllUser() {
         try {
             String query = "SELECT * FROM " + TableName.LOGIN_TABLE;
-            RowMapper<Login> loginRowMapper = new RawMapperImple();
+            RowMapper<Login> loginRowMapper = new LoginRawMapperImple();
             List<Login> loginList = jdbcTemplate.query(query, loginRowMapper);
             return loginList;
         } catch (Exception e) {
@@ -115,18 +111,31 @@ public class LoginDao implements LoginInterface {
     @Override
     public Login findByMailId(String mailId) {
         try {
-            System.out.println(mailId);
+
             String query = "SELECT * FROM " + TableName.LOGIN_TABLE + " WHERE MAILID=?";
-            RowMapper<Login> loginRowMapper = new RawMapperImple();
+            RowMapper<Login> loginRowMapper = new LoginRawMapperImple();
             Login login = jdbcTemplate.queryForObject(query, loginRowMapper, mailId);
             return login;
         } catch (EmptyResultDataAccessException e) {
             if (e.getActualSize() == 0) {
-                new Login();
+                return new Login();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public int ChangeName(Login l) {
+        try {
+
+            String query = "UPDATE " + TableName.LOGIN_TABLE + " SET NAME=? WHERE MAILID=?";
+            int row = jdbcTemplate.update(query, l.getName(), l.getMailId());
+            return row;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
     }
 }

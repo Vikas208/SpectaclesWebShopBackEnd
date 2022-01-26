@@ -6,35 +6,28 @@ public class Login {
     private String name;
     private String password;
 
+    // no user Found
     public Login() {
         this.id = -1;
         this.mailId = null;
         this.name = null;
         this.password = null;
     }
-//    Login Update Data
-    public Login(String mailId,String password){
-        this.mailId = mailId;
-        this.password = password;
-    }
 
-//    Create User
-    public Login(String mailId, String name, String password) {
-        System.out.println("Created");
-        this.mailId = mailId;
-        this.name = name;
-        this.password = password;
-    }
-
-    //    when Fetch Data
+    // when Fetch Data
     public Login(long id, String mailId, String name, String password) {
         this.id = id;
         this.mailId = mailId;
         this.name = name;
         this.password = password;
-
     }
 
+    // Fetch User Details
+    public Login(long id, String mailId, String name) {
+        this.id = id;
+        this.mailId = mailId;
+        this.name = name;
+    }
 
     public String getMailId() {
         return mailId;
@@ -68,4 +61,13 @@ public class Login {
         this.password = password;
     }
 
+    @Override
+    public String toString() {
+        return "Login{" +
+                "id=" + id +
+                ", mailId='" + mailId + '\'' +
+                ", name='" + name + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
 }

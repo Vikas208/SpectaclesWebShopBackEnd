@@ -31,7 +31,7 @@ public class EmailService {
         try{
             GenerateOtp();
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom("technologyguide44@gmail.com");
+            message.setFrom("shreechasamaghar263@gmail.com");
             message.setTo(mail);
             message.setSubject("Spectacles Web Shop");
             message.setText("Otp is : "+this.otp+"\nNote:- Otp Valid For 5 minutes\n\nwith regards\nSpectacles web shop team");

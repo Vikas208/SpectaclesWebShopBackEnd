@@ -4,6 +4,7 @@ public class ServerResponse {
     private String message;
     private String token;
     private boolean success;
+    private String UserName;
 
     public String getToken() {
         return token;
@@ -13,11 +14,19 @@ public class ServerResponse {
         this.token = token;
     }
 
-    public ServerResponse(String token,String message, boolean success){
+    public ServerResponse(String token, String message, boolean success) {
+        this.token = token;
+        this.message = message;
+        this.success = success;
+    }
+
+    public ServerResponse(String token, String UserName, String message, boolean success) {
         this.message = message;
         this.success = success;
         this.token = token;
+        this.UserName = UserName;
     }
+
     public ServerResponse(String message, boolean success) {
         this.message = message;
         this.success = success;
@@ -37,5 +46,13 @@ public class ServerResponse {
 
     public void setSuccess(boolean success) {
         this.success = success;
+    }
+
+    public String getUserName() {
+        return UserName;
+    }
+
+    public void setUserName(String userName) {
+        UserName = userName;
     }
 }

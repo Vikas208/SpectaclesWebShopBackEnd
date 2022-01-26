@@ -1,4 +1,4 @@
-package com.example.SpectaclesWebShop.RawMapperImplement;
+package com.example.SpectaclesWebShop.RawMapperImplement.LoginRaw;
 
 import com.example.SpectaclesWebShop.Bean.Login;
 import org.springframework.jdbc.core.RowMapper;
@@ -6,9 +6,9 @@ import org.springframework.jdbc.core.RowMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class RawMapperImple implements RowMapper<Login> {
+public class LoginRawMapperImple implements RowMapper<Login> {
 
-    public RawMapperImple(){
+    public LoginRawMapperImple(){
 
     }
     @Override
