@@ -1,18 +1,12 @@
 package com.example.SpectaclesWebShop.ServerResponse;
 
+import com.example.SpectaclesWebShop.Bean.Login;
+
 public class ServerResponse {
     private String message;
     private String token;
     private boolean success;
-    private String UserName;
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
+    private Login userDetails;
 
     public ServerResponse(String token, String message, boolean success) {
         this.token = token;
@@ -20,11 +14,11 @@ public class ServerResponse {
         this.success = success;
     }
 
-    public ServerResponse(String token, String UserName, String message, boolean success) {
+    public ServerResponse(String token,Login login, String message, boolean success) {
         this.message = message;
         this.success = success;
         this.token = token;
-        this.UserName = UserName;
+        this.userDetails = login;
     }
 
     public ServerResponse(String message, boolean success) {
@@ -40,6 +34,14 @@ public class ServerResponse {
         this.message = message;
     }
 
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
     public boolean isSuccess() {
         return success;
     }
@@ -48,11 +50,11 @@ public class ServerResponse {
         this.success = success;
     }
 
-    public String getUserName() {
-        return UserName;
+    public Login getUserDetails() {
+        return userDetails;
     }
 
-    public void setUserName(String userName) {
-        UserName = userName;
+    public void setUserDetails(Login userDetails) {
+        this.userDetails = userDetails;
     }
 }

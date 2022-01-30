@@ -1,13 +1,13 @@
 package com.example.SpectaclesWebShop.Controller;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.example.SpectaclesWebShop.Bean.Login;
-import com.example.SpectaclesWebShop.Helper.EmailService;
-import com.example.SpectaclesWebShop.ServerResponse.OtpResponse;
+import com.example.SpectaclesWebShop.Service.EmailService;
 import com.example.SpectaclesWebShop.ServerResponse.ServerResponse;
-import com.example.SpectaclesWebShop.CodeName.Code;
+import com.example.SpectaclesWebShop.Info.Code;
 import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.Helper.JwtUtil;
 import com.example.SpectaclesWebShop.Service.CustomeUserDetailService;
@@ -17,8 +17,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -38,8 +41,19 @@ public class UserAuthController {
     JwtUtil jwtUtil;
 
     @Autowired
-    EmailService emailService;
+    EmailService emailservice;
 
+    @Autowired
+    com.example.SpectaclesWebShop.Service.otpService otpService;
+
+    public Cookie createCookie(String token){
+        String tString = "Bearer" + token;
+        Cookie cookie = new Cookie("token", tString);
+        cookie.setMaxAge(7 * 24 * 60 * 60);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        return cookie;
+    }
     // Register an User
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Login l, HttpServletResponse response) {
@@ -51,16 +65,12 @@ public class UserAuthController {
                 UserDetails userDetails = this.customeUserDetailService.loadUserByUsername(l.getMailId());
                 String token = this.jwtUtil.generateToken(userDetails);
 
-                // set cookies
-                String tString = "Bearer" + token;
-                Cookie cookie = new Cookie("token", tString);
-                cookie.setMaxAge(7 * 24 * 60 * 60);
-                cookie.setHttpOnly(true);
-                cookie.setPath("/");
-                response.addCookie(cookie);
-
+                Login login = loginDao.findByMailId(l.getMailId());
+                login.setPassword(null);
+                //set Cookie
+                response.addCookie(createCookie(token));
                 return ResponseEntity.ok()
-                        .body(new ServerResponse(token, "Register Successfully", true));
+                        .body(new ServerResponse(token,login,"Register Successfully", true));
             }
         } catch (Exception e) {
             System.out.println(e);
@@ -72,26 +82,19 @@ public class UserAuthController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Login login, HttpServletResponse response) {
         try {
-
-            // System.out.println(login.getMailId() + " " + login.getPassword());
             int res = authenticate(login.getMailId(), login.getPassword());
-            // System.out.println(res);
             if (res == Code.USER_NOT_EXIST) {
                 return ResponseEntity.status(401).body(new ServerResponse("Bad Credentials", false));
             } else if (res == Code.SUCCESS) {
-                String userName = loginDao.getUserName(login.getMailId());
+                Login login1 = loginDao.findByMailId(login.getMailId());
+                login1.setPassword(null);
                 UserDetails userDetails = this.customeUserDetailService.loadUserByUsername(login.getMailId());
                 String token = this.jwtUtil.generateToken(userDetails);
-                // set Cookies
-                String tString = "Bearer" + token;
-                Cookie cookie = new Cookie("token", tString);
-                cookie.setMaxAge(7 * 24 * 60 * 60);
-                cookie.setHttpOnly(true);
-                cookie.setPath("/");
-                response.addCookie(cookie);
+                //set Cookie
+                response.addCookie(createCookie(token));
 
                 return ResponseEntity.ok()
-                        .body(new ServerResponse(token, userName, "Login Successfully", true));
+                        .body(new ServerResponse(token, login1, "Login Successfully", true));
             }
         } catch (Exception e) {
             System.out.println("Login Controller " + e.toString());
@@ -117,16 +120,34 @@ public class UserAuthController {
     @PostMapping("/sendMail")
     public ResponseEntity<?> sendMail(@RequestParam String mail) {
         try {
-            OtpResponse otpResponse = emailService.sendMail(mail);
-            if (otpResponse.isSuccess()) {
-                return ResponseEntity.ok(otpResponse);
+            //generate opt
+            int otp = otpService.GenerateOtp(mail);
+
+            if(emailservice.sendMail(mail,otp)){
+                return ResponseEntity.ok(new ServerResponse("OTP Sent to your email id",true));
             }
+            return ResponseEntity.ok(new ServerResponse("Something is wrong",false));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return ResponseEntity.internalServerError().body(new ServerResponse("Mail Not Sent", false));
     }
 
+    //Validate opt api
+    @GetMapping("/validateOtp")
+    public ResponseEntity<?> validateOtp(@RequestParam("mail") String mail,@RequestParam("otp") String opt){
+        try{
+            int serverOpt = otpService.getOtp(mail);
+            if(serverOpt==Integer.parseInt(opt)){
+                otpService.clearOTP(mail);
+                return ResponseEntity.ok(true);
+            }
+            return ResponseEntity.ok(false);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error",false));
+    }
     // forgot password opt api
     @PostMapping("/forgotPassword")
     public ResponseEntity<?> forgotPassword(@RequestParam String mail) {
@@ -166,8 +187,15 @@ public class UserAuthController {
 
     // Logout
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if(authentication!=null){
+                String key = authentication.getName();
+                otpService.clearOTP(key);
+                new SecurityContextLogoutHandler().logout(request,response,authentication);
+            }
             Cookie cookie = new Cookie("token", "");
             cookie.setMaxAge(0);
             cookie.setHttpOnly(true);

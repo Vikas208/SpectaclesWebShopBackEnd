@@ -21,6 +21,7 @@ public class ShopDetailsRawMapperImple implements RowMapper<ShopDetails> {
 
         shopDetails.setPhoneNumber(rs.getString(6));
         shopDetails.setMailId(rs.getString(7));
+        shopDetails.setLogoUrl(rs.getString(8));
 
         shopDetails.setAddress(address);
         return shopDetails;

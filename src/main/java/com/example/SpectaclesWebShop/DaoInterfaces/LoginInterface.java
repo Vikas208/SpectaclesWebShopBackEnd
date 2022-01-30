@@ -9,7 +9,6 @@ public interface LoginInterface {
     int createDataBase();
     int SaveData(Login l);
     int deleteData(int id);
-    String getUserName(String mailId);
     int UpdatePassword(Login details);
     List<Login> getAllUser();
     Login findByMailId(String mailId);

@@ -5,12 +5,27 @@ public class ShopDetails {
     private Address address;
     private String phoneNumber;
     private String mailId;
+    private static final String public_id = "ShopDetails/logo.jpg";
+    private String logoUrl;
 
-    public ShopDetails(String shopName, Address address, String phoneNumber, String mailId) {
+    public ShopDetails(String shopName, Address address, String phoneNumber, String mailId,String url) {
         this.shopName = shopName;
         this.address = address;
         this.phoneNumber = phoneNumber;
         this.mailId = mailId;
+        this.logoUrl =url;
+    }
+
+    public String getPublic_id() {
+        return public_id;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 
     public ShopDetails() {

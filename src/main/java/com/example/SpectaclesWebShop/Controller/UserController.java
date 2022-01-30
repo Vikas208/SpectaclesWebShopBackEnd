@@ -1,9 +1,7 @@
 package com.example.SpectaclesWebShop.Controller;
 
-import javax.ws.rs.core.Request;
-
 import com.example.SpectaclesWebShop.Bean.Login;
-import com.example.SpectaclesWebShop.CodeName.Code;
+import com.example.SpectaclesWebShop.Info.Code;
 import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.ServerResponse.ServerResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +16,7 @@ public class UserController {
     @Autowired
     UserAuthController userAuthController;
 
+    //When we change the Password for that we have first check user's old password which he inserted is valid or not
     @PostMapping("/validUser")
     public ResponseEntity<?> validateUser(@RequestBody Login login) {
         try {
@@ -37,8 +36,6 @@ public class UserController {
     @PutMapping("/changeUserName")
     public ResponseEntity<?> changeUserName(@RequestBody Login login) {
         try {
-
-            System.out.println(login.getMailId() + " " + login.getName());
             int result = loginDao.ChangeName(login);
             if (result != Code.ERROR_CODE) {
                 if (result == 0) {

@@ -1,7 +1,10 @@
 package com.example.SpectaclesWebShop.Controller;
 
 import java.util.HashMap;
+import java.util.List;
 
+import com.example.SpectaclesWebShop.Bean.Carousel;
+import com.example.SpectaclesWebShop.Bean.Login;
 import com.example.SpectaclesWebShop.Bean.ShopDetails;
 import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.Dao.ShopDetailsDao;
@@ -29,7 +32,7 @@ public class LoadDetailsController {
     @Autowired
     LoginDao loginDao;
 
-    @GetMapping("/loadDetails")
+    @GetMapping("/load/loadDetails")
     public ResponseEntity<?> LoadDetails() {
         try {
             ShopDetails shopDetails = shopDetailsDao.getShopDetails();
@@ -48,12 +51,11 @@ public class LoadDetailsController {
 
                 String token = tString.substring(6);
                 String mailId = jwtUtil.extractUsername(token);
-                String userName = loginDao.getUserName(mailId);
+                Login login = loginDao.findByMailId(mailId);
+                login.setPassword(null);
+                HashMap<String, Object> hashMap = new HashMap<>();
 
-                HashMap<String, String> hashMap = new HashMap<>();
-
-                hashMap.put("mailId", mailId);
-                hashMap.put("userName", userName);
+                hashMap.put("userDetails", login);
                 hashMap.put("token", token);
 
                 return new ResponseEntity<>(hashMap, HttpStatus.OK);
@@ -62,6 +64,18 @@ public class LoadDetailsController {
             e.printStackTrace();
         }
 
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @GetMapping("/load/carousel")
+    public ResponseEntity<?> getCarousel(){
+        try{
+            List<Carousel> carouselImages = shopDetailsDao.getCarouselImages();
+
+            return ResponseEntity.ok(carouselImages);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

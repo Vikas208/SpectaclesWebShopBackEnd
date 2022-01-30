@@ -1,5 +1,9 @@
 package com.example.SpectaclesWebShop.Bean;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.example.SpectaclesWebShop.Secret;
+
 public class Address {
     private String address;
     private String city;
@@ -48,4 +52,5 @@ public class Address {
     public void setPinCode(String pinCode) {
         this.pinCode = pinCode;
     }
+
 }

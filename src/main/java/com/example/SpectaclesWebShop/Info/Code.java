@@ -1,4 +1,4 @@
-package com.example.SpectaclesWebShop.CodeName;
+package com.example.SpectaclesWebShop.Info;
 
 public class Code {
     public static final int ERROR_CODE = -1;

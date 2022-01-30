@@ -1,9 +1,9 @@
 package com.example.SpectaclesWebShop.Dao;
 
 import com.example.SpectaclesWebShop.Bean.Login;
-import com.example.SpectaclesWebShop.CodeName.Code;
+import com.example.SpectaclesWebShop.Info.Code;
 import com.example.SpectaclesWebShop.DaoInterfaces.LoginInterface;
-import com.example.SpectaclesWebShop.CodeName.TableName;
+import com.example.SpectaclesWebShop.Info.TableName;
 import com.example.SpectaclesWebShop.RawMapperImplement.LoginRaw.LoginRawMapperImple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -31,9 +31,8 @@ public class LoginDao implements LoginInterface {
     public int createDataBase() {
         try {
             String query = "CREATE TABLE IF NOT EXISTS " + TableName.LOGIN_TABLE
-                    + " (ID INT AUTO_INCREMENT PRIMARY KEY,MAILID VARCHAR(100) UNIQUE NOT NULL,NAME VARCHAR(100) NOT NULL,PASSWORD VARCHAR(200) NOT NULL);";
-            int res = jdbcTemplate.update(query);
-            return res;
+                    + " (ID INT AUTO_INCREMENT PRIMARY KEY,MAILID VARCHAR(100) UNIQUE NOT NULL,NAME VARCHAR(100) NOT NULL,PASSWORD VARCHAR(300) NOT NULL);";
+            return jdbcTemplate.update(query);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -46,8 +45,7 @@ public class LoginDao implements LoginInterface {
         try {
             String query = "INSERT INTO " + TableName.LOGIN_TABLE + " (MAILID,NAME,PASSWORD) VALUES(?,?,?);";
             String password = bCryptPasswordEncoder.encode(l.getPassword());
-            int row = jdbcTemplate.update(query, l.getMailId(), l.getName(), password);
-            return row;
+            return jdbcTemplate.update(query, l.getMailId(), l.getName(), password);
         } catch (DuplicateKeyException e) {
             return Code.DUPLICATE_KEY;
         } catch (Exception e) {
@@ -60,8 +58,7 @@ public class LoginDao implements LoginInterface {
     public int deleteData(int id) {
         try {
             String query = "DELETE FROM " + TableName.LOGIN_TABLE + " WHERE ID=?";
-            int res = jdbcTemplate.update(query, id);
-            return res;
+            return jdbcTemplate.update(query, id);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -73,35 +70,21 @@ public class LoginDao implements LoginInterface {
         try {
             String password = bCryptPasswordEncoder.encode(details.getPassword());
             String query = "UPDATE " + TableName.LOGIN_TABLE + " SET PASSWORD=? WHERE MAILID=?";
-            int row = jdbcTemplate.update(query, password, details.getMailId());
 
-            return row;
+            return jdbcTemplate.update(query, password, details.getMailId());
         } catch (Exception e) {
             e.printStackTrace();
         }
         return Code.ERROR_CODE;
     }
 
-    @Override
-    public String getUserName(String MailId) {
-        try {
-            String query = "SELECT NAME FROM " + TableName.LOGIN_TABLE + " WHERE MAILID=?";
-            String result = jdbcTemplate.queryForObject(query, String.class, MailId);
-            // System.out.println(result);
-            return result;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     @Override
     public List<Login> getAllUser() {
         try {
             String query = "SELECT * FROM " + TableName.LOGIN_TABLE;
             RowMapper<Login> loginRowMapper = new LoginRawMapperImple();
-            List<Login> loginList = jdbcTemplate.query(query, loginRowMapper);
-            return loginList;
+            return jdbcTemplate.query(query, loginRowMapper);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -114,8 +97,7 @@ public class LoginDao implements LoginInterface {
 
             String query = "SELECT * FROM " + TableName.LOGIN_TABLE + " WHERE MAILID=?";
             RowMapper<Login> loginRowMapper = new LoginRawMapperImple();
-            Login login = jdbcTemplate.queryForObject(query, loginRowMapper, mailId);
-            return login;
+            return jdbcTemplate.queryForObject(query, loginRowMapper, mailId);
         } catch (EmptyResultDataAccessException e) {
             if (e.getActualSize() == 0) {
                 return new Login();
@@ -130,9 +112,8 @@ public class LoginDao implements LoginInterface {
     public int ChangeName(Login l) {
         try {
 
-            String query = "UPDATE " + TableName.LOGIN_TABLE + " SET NAME=? WHERE MAILID=?";
-            int row = jdbcTemplate.update(query, l.getName(), l.getMailId());
-            return row;
+            String query = "UPDATE " + TableName.LOGIN_TABLE + " SET NAME=? WHERE ID=?";
+            return jdbcTemplate.update(query, l.getName(), l.getId());
         } catch (Exception e) {
             e.printStackTrace();
         }
