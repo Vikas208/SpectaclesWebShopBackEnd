@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -68,12 +67,12 @@ public class LoadDetailsController {
     }
 
     @GetMapping("/load/carousel")
-    public ResponseEntity<?> getCarousel(){
-        try{
+    public ResponseEntity<?> getCarousel() {
+        try {
             List<Carousel> carouselImages = shopDetailsDao.getCarouselImages();
 
             return ResponseEntity.ok(carouselImages);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

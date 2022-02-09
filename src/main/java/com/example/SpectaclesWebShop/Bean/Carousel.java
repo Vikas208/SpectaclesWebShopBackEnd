@@ -1,11 +1,11 @@
 package com.example.SpectaclesWebShop.Bean;
 
-import java.util.ArrayList;
-
 public class Carousel {
     private String images;
 
-    public Carousel(){}
+    public Carousel() {
+    }
+
     public Carousel(String images) {
         this.images = images;
     }

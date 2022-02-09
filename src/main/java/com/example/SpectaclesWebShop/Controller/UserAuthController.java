@@ -46,14 +46,16 @@ public class UserAuthController {
     @Autowired
     com.example.SpectaclesWebShop.Service.otpService otpService;
 
-    public Cookie createCookie(String token){
+    public Cookie createCookie(String token) {
         String tString = "Bearer" + token;
         Cookie cookie = new Cookie("token", tString);
         cookie.setMaxAge(7 * 24 * 60 * 60);
         cookie.setHttpOnly(true);
+        cookie.setSecure(true);
         cookie.setPath("/");
         return cookie;
     }
+
     // Register an User
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Login l, HttpServletResponse response) {
@@ -67,10 +69,10 @@ public class UserAuthController {
 
                 Login login = loginDao.findByMailId(l.getMailId());
                 login.setPassword(null);
-                //set Cookie
+                // set Cookie
                 response.addCookie(createCookie(token));
                 return ResponseEntity.ok()
-                        .body(new ServerResponse(token,login,"Register Successfully", true));
+                        .body(new ServerResponse(token, login, "Register Successfully", true));
             }
         } catch (Exception e) {
             System.out.println(e);
@@ -90,7 +92,7 @@ public class UserAuthController {
                 login1.setPassword(null);
                 UserDetails userDetails = this.customeUserDetailService.loadUserByUsername(login.getMailId());
                 String token = this.jwtUtil.generateToken(userDetails);
-                //set Cookie
+                // set Cookie
                 response.addCookie(createCookie(token));
 
                 return ResponseEntity.ok()
@@ -120,34 +122,35 @@ public class UserAuthController {
     @PostMapping("/sendMail")
     public ResponseEntity<?> sendMail(@RequestParam String mail) {
         try {
-            //generate opt
+            // generate opt
             int otp = otpService.GenerateOtp(mail);
 
-            if(emailservice.sendMail(mail,otp)){
-                return ResponseEntity.ok(new ServerResponse("OTP Sent to your email id",true));
+            if (emailservice.sendMail(mail, otp)) {
+                return ResponseEntity.ok(new ServerResponse("OTP Sent to your email id", true));
             }
-            return ResponseEntity.ok(new ServerResponse("Something is wrong",false));
+            return ResponseEntity.ok(new ServerResponse("Something is wrong", false));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return ResponseEntity.internalServerError().body(new ServerResponse("Mail Not Sent", false));
     }
 
-    //Validate opt api
+    // Validate opt api
     @GetMapping("/validateOtp")
-    public ResponseEntity<?> validateOtp(@RequestParam("mail") String mail,@RequestParam("otp") String opt){
-        try{
+    public ResponseEntity<?> validateOtp(@RequestParam("mail") String mail, @RequestParam("otp") String opt) {
+        try {
             int serverOpt = otpService.getOtp(mail);
-            if(serverOpt==Integer.parseInt(opt)){
+            if (serverOpt == Integer.parseInt(opt)) {
                 otpService.clearOTP(mail);
                 return ResponseEntity.ok(true);
             }
             return ResponseEntity.ok(false);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error",false));
+        return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
     }
+
     // forgot password opt api
     @PostMapping("/forgotPassword")
     public ResponseEntity<?> forgotPassword(@RequestParam String mail) {
@@ -191,10 +194,10 @@ public class UserAuthController {
         try {
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if(authentication!=null){
+            if (authentication != null) {
                 String key = authentication.getName();
                 otpService.clearOTP(key);
-                new SecurityContextLogoutHandler().logout(request,response,authentication);
+                new SecurityContextLogoutHandler().logout(request, response, authentication);
             }
             Cookie cookie = new Cookie("token", "");
             cookie.setMaxAge(0);
