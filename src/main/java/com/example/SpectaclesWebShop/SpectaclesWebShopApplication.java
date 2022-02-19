@@ -1,5 +1,6 @@
 package com.example.SpectaclesWebShop;
 
+import com.example.SpectaclesWebShop.Dao.CustomerProductsDao;
 import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.Dao.ProductsDao;
 import com.example.SpectaclesWebShop.Dao.ShopDetailsDao;
@@ -18,6 +19,10 @@ public class SpectaclesWebShopApplication implements CommandLineRunner {
 
 	@Autowired
 	ProductsDao productsDao;
+
+	@Autowired
+	CustomerProductsDao customerProductsDao;
+
 	public static void main(String[] args) {
 		SpringApplication.run(SpectaclesWebShopApplication.class, args);
 	}
@@ -27,6 +32,7 @@ public class SpectaclesWebShopApplication implements CommandLineRunner {
 		loginDao.createDataBase();
 		shopDetailsDao.createDatabase();
 		productsDao.createDataBase();
+		customerProductsDao.CreateDataBase();
 		System.out.println("App Started");
 	}
 }

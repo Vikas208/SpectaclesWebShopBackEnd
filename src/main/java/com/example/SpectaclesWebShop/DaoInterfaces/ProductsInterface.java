@@ -9,37 +9,38 @@ import com.example.SpectaclesWebShop.Bean.Products;
 import java.util.List;
 
 public interface ProductsInterface {
-    public void createDataBase();
+        public void createDataBase();
 
-    public List<Products> getAllProducts(int limit, int offset);
+        public List<Products> getAllProducts(int limit, int offset);
 
-    public List<Products> getTrendingProducts();
+        public List<Products> getTrendingProducts();
 
-    public Products getProduct(long id);
+        public Products getProduct(long id);
 
-    public int countProducts();
+        public int countProducts();
 
-    public List<FeedBack> getProductReviews(long p_id);
+        public List<FeedBack> getProductReviews(long p_id);
 
-    public List<ProductImage> getProductImage(long p_id);
+        public List<ProductImage> getProductImage(long p_id);
 
-    public int saveFeedback(FeedBack feedBack);
+        public int saveFeedback(FeedBack feedBack);
 
-    public List<Products> searchProducts(String searchQuery, int offset);
+        public List<Products> searchProducts(String searchQuery, int offset);
 
-    public int countSearchedProducts(String searchQuery);
+        public int countSearchedProducts(String searchQuery);
 
-    public List<Data> getAllCategories();
+        public List<Data> getAllCategories();
 
-    public List<Data> getAllFrameStyle();
+        public List<Data> getAllFrameStyle();
 
-    public List<Data> getAllCompanyName();
+        public List<Data> getAllCompanyName();
 
-    public List<Products> filterProducts(String name, String category, String frameStyle, String companyname,
-            String group, String framesize,
-            int offset);
+        public List<Products> filterProducts(String name, String category, String frameStyle, String companyname,
+                        String group, String framesize, double sprice, double eprice,
+                        int offset);
 
-    public int countFilterProducts(String name, String category, String frameStyle, String companyname, String group,
-            String framesize);
+        public int countFilterProducts(String name, String category, String frameStyle, String companyname,
+                        String group,
+                        String framesize, double sprice, double eprice);
 
 }

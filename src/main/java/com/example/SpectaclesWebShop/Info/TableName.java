@@ -11,4 +11,10 @@ public class TableName {
     public static final String CATEGORY = "CATEGORY";
     public static final String FRAME_STYLE = "FRAME_STYLE";
     public static final String COMPANY_NAME = "COMPANYNAME";
+    public static final String CUSTOMER_CART = "CUSTOMER_CART";
+    public static final String CUSTOMER_WISHLIST = "CUSTOMER_WISHLIST";
+    public static final String SHIPPING_CHARGES = "SHIPPING_CHARGES";
+    public static final String TAX_DATABASE = "TAXDATABASE";
+    public static final String GLASSPRICE = "GLASSPRICE";
+
 }

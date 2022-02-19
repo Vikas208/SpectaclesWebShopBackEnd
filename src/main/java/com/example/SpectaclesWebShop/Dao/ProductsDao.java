@@ -28,6 +28,7 @@ public class ProductsDao implements ProductsInterface {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    // Products DataBase
     public String createProductDatabase() {
         return "create table if not exists " + TableName.PRODUCTS
                 + " (P_ID int auto_increment primary key,P_NAME varchar(100) NOT NULL,P_DESCRIPTION varchar(2000),P_PRICE double NOT NULL,P_CATEGORY varchar(50) NOT NULL,P_GROUP VARCHAR(6) NOT NULL,P_FRAMESTYLE VARCHAR(50) NOT NULL,FRAMESIZE VARCHAR(45) NOT NULL,COLOR VARCHAR(45) NOT NULL,COMPANY_NAME VARCHAR(50) NOT NULL,BANNER_IMAGE VARCHAR(2000) NOT NULL,P_STOCK INT NOT NULL DEFAULT (0),TOTALSALES INT DEFAULT (0),CONSTRAINT FOREIGN KEY (P_CATEGORY) REFERENCES "
@@ -35,6 +36,7 @@ public class ProductsDao implements ProductsInterface {
                 + " (FRAMENAME), FOREIGN KEY (COMPANY_NAME) REFERENCES " + TableName.COMPANY_NAME + " (COMPANY_NAME));";
     }
 
+    // Reviews DataBase
     public String createReviewDatabase() {
         return "CREATE table if not exists " + TableName.REVIEWS
                 + " (PR_ID INT auto_increment primary key,P_ID INT,C_ID INT ,RATING double NOT NULL default(0),FEEDBACK VARCHAR(1000),CONSTRAINT FOREIGN KEY (P_ID) REFERENCES "
@@ -42,32 +44,38 @@ public class ProductsDao implements ProductsInterface {
                 + "(ID) ON DELETE CASCADE);";
     }
 
+    // Products Images DataBase
     public String CreateProductImagesDatabase() {
         return "CREATE TABLE IF NOT EXISTS " + TableName.PRODUCT_IMAGE
                 + " (PI_ID INT AUTO_INCREMENT PRIMARY KEY,P_ID INT,IMAGE_URL VARCHAR(2000),CONSTRAINT FOREIGN KEY(P_ID) REFERENCES "
                 + TableName.PRODUCTS + "(P_ID) ON DELETE CASCADE)";
     }
 
+    // Sales DataBase
     public String createSalesDatabase() {
         return "CREATE TABLE IF NOT EXISTS " + TableName.PRODUCT_SALES
                 + " (PS_ID INT AUTO_INCREMENT PRIMARY KEY,P_ID INT UNIQUE,OFF_AMOUNT double default(0.0),PERCENTAGE double default(0.0),S_DATE DATE NOT NULL,E_DATE DATE NOT NULL,CONSTRAINT FOREIGN KEY(P_ID) REFERENCES "
                 + TableName.PRODUCTS + "(P_ID) ON DELETE CASCADE,CHECK(S_DATE<=E_DATE))";
     }
 
+    // Category DataBase
     public String createCategoryTable() {
         return "CREATE TABLE IF NOT EXISTS " + TableName.CATEGORY
                 + " (CAT_ID INT AUTO_INCREMENT PRIMARY KEY,CATEGORYNAME VARCHAR(50) NOT NULL UNIQUE)";
     }
 
+    // FrameStyle DataBase
     public String createFrameStyleTable() {
         return "CREATE TABLE IF NOT EXISTS " + TableName.FRAME_STYLE
                 + " (FRAME_ID INT AUTO_INCREMENT PRIMARY KEY,FRAMENAME VARCHAR(50) NOT NULL UNIQUE)";
     }
 
+    // Company Name DataBase
     public String createCompanyNameTable() {
         return "CREATE TABLE IF NOT EXISTS " + TableName.COMPANY_NAME
                 + " (COMPANY_ID INT AUTO_INCREMENT PRIMARY KEY,COMPANY_NAME VARCHAR(50)NOT NULL UNIQUE)";
     }
+    //
 
     @Override
     public void createDataBase() {
@@ -253,22 +261,28 @@ public class ProductsDao implements ProductsInterface {
 
     @Override
     public List<Products> filterProducts(String name, String category, String frameStyle, String companyname,
-            String group, String framesize,
+            String group, String framesize, double sprice, double eprice,
             int offset) {
         try {
+
+            String priceQuery = "P_PRICE BETWEEN " + sprice + " AND " + eprice;
+            if (eprice == 0) {
+                priceQuery = "P_PRICE BETWEEN " + sprice + " AND (SELECT MAX(P_PRICE) FROM " + TableName.PRODUCTS + ")";
+            }
 
             String query = "SELECT * FROM " + TableName.PRODUCTS + " P left join (select P_ID,AVG(RATING)'RATING' FROM "
                     + TableName.REVIEWS
                     + " GROUP BY(P_ID))PR ON P.P_ID=PR.P_ID WHERE P_CATEGORY regexp ('"
                     + category + "') and P_FRAMESTYLE regexp ('" + frameStyle
                     + "')  and COMPANY_NAME regexp ('" + companyname + "') and P_GROUP regexp ('"
-                    + group + "') and FRAMESIZE regexp('" + framesize + "') and (P_NAME regexp ('" + name
+                    + group + "') and FRAMESIZE regexp('" + framesize + "') and " + priceQuery
+                    + " and (P_NAME regexp ('"
+                    + name
                     + "') or P_FRAMESTYLE regexp ('" + name + "') or COMPANY_NAME REGEXP ('" + name
                     + "') or P_CATEGORY regexp ('" + name + "') or P_GROUP regexp ('" + name + "')) LIMIT 15 OFFSET ?";
 
             RowMapper<Products> pRowMapper = new ProductsRawImple();
             return jdbcTemplate.query(query, pRowMapper, offset);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -277,9 +291,13 @@ public class ProductsDao implements ProductsInterface {
 
     @Override
     public int countFilterProducts(String name, String category, String frameStyle, String companyname,
-            String group, String framesize) {
+            String group, String framesize, double sprice, double eprice) {
 
         try {
+            String priceQuery = "P_PRICE BETWEEN " + sprice + " AND " + eprice;
+            if (eprice == 0) {
+                priceQuery = "P_PRICE BETWEEN " + sprice + " AND (SELECT MAX(P_PRICE) FROM " + TableName.PRODUCTS + ")";
+            }
             String query = "SELECT count(P.P_ID) FROM " + TableName.PRODUCTS
                     + " P left join (select P_ID,AVG(RATING)'RATING' FROM "
                     + TableName.REVIEWS
@@ -287,7 +305,8 @@ public class ProductsDao implements ProductsInterface {
                     + category + "') and P_FRAMESTYLE regexp ('" + frameStyle
                     + "')  and COMPANY_NAME regexp ('" + companyname + "') and P_GROUP regexp ('"
                     + group + "')  and FRAMESIZE regexp('" + framesize
-                    + "') and (P_NAME regexp ('" + name
+                    + "') and " + priceQuery
+                    + " and (P_NAME regexp ('" + name
                     + "') or P_FRAMESTYLE regexp ('" + name + "') or COMPANY_NAME REGEXP ('" + name
                     + "') or P_CATEGORY regexp ('" + name + "') or P_GROUP regexp ('" + name + "'))";
             return jdbcTemplate.queryForObject(query, Integer.class);

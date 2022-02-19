@@ -162,12 +162,15 @@ public class ProductsController {
             @RequestParam(value = "companyName", defaultValue = "^") String companyname,
             @RequestParam(value = "group", defaultValue = "^") String group,
             @RequestParam(value = "framesize", defaultValue = "^") String framesize,
+            @RequestParam(value = "startingprice") double startingprice,
+            @RequestParam(value = "endingprice") double endingprice,
             @RequestParam("offset") int offset) {
         try {
             // System.out.println(category + " " + frameStyle + " " + companyname + " " +
             // group);
+            // System.out.println("filter" + category);
             List<Products> products = productsDao.filterProducts(name, category, frameStyle, companyname, group,
-                    framesize,
+                    framesize, startingprice, endingprice,
                     offset);
             if (products != null) {
                 return ResponseEntity.ok(products);
@@ -185,9 +188,12 @@ public class ProductsController {
             @RequestParam(value = "companyName") String companyname,
             @RequestParam(value = "group") String group,
             @RequestParam(value = "framesize") String framesize,
-            @RequestParam(value = "color") String color) {
+            @RequestParam(value = "startingprice") double startingprice,
+            @RequestParam(value = "endingprice") double endingprice) {
         try {
-            int length = productsDao.countFilterProducts(name, category, frameStyle, companyname, group, framesize);
+            // System.out.println("count" + category);
+            int length = productsDao.countFilterProducts(name, category, frameStyle, companyname, group, framesize,
+                    startingprice, endingprice);
             return ResponseEntity.ok(length);
         } catch (Exception e) {
             e.printStackTrace();

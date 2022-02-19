@@ -13,33 +13,30 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/cloud")
 public class ImageUploadController {
-    private static Cloudinary getCloudinaryClient(){
+    private static Cloudinary getCloudinaryClient() {
         return new Cloudinary(ObjectUtils.asMap(
                 "cloud_name", Secret.CLOUD_NAME,
                 "api_key", Secret.API_KEY,
                 "api_secret", Secret.API_SECRET,
-                "secure",true
-        ));
+                "secure", true));
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> upload(@ModelAttribute FileUpload file){
-        try{
+    public ResponseEntity<?> upload(@ModelAttribute FileUpload file) {
+        try {
             File uploadedFile = convertMultiPartToFile(file.getFile());
-            Map params = ObjectUtils.asMap(
+            Map<?, ?> params = ObjectUtils.asMap(
                     "public_id", "UserAvatar/myphoto",
                     "overwrite", true,
-                    "secure",true
-            );
-            Map uploadResult = getCloudinaryClient().uploader().upload(uploadedFile, params);
+                    "secure", true);
+            Map<?, ?> uploadResult = getCloudinaryClient().uploader().upload(uploadedFile, params);
 
-            return new ResponseEntity<>(uploadResult.get("url").toString(),HttpStatus.OK);
-        }catch (Exception e){
+            return new ResponseEntity<>(uploadResult.get("url").toString(), HttpStatus.OK);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -52,6 +49,5 @@ public class ImageUploadController {
         fos.close();
         return convFile;
     }
-
 
 }

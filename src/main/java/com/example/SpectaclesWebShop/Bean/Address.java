@@ -1,16 +1,12 @@
 package com.example.SpectaclesWebShop.Bean;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
-import com.example.SpectaclesWebShop.Secret;
-
 public class Address {
     private String address;
     private String city;
     private String state;
     private String pinCode;
 
-    public Address(String address,String city, String state, String pinCode) {
+    public Address(String address, String city, String state, String pinCode) {
         this.address = address;
         this.city = city;
         this.state = state;

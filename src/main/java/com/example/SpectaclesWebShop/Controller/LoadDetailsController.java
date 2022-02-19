@@ -4,8 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.example.SpectaclesWebShop.Bean.Carousel;
+import com.example.SpectaclesWebShop.Bean.GlassPrice;
 import com.example.SpectaclesWebShop.Bean.Login;
 import com.example.SpectaclesWebShop.Bean.ShopDetails;
+import com.example.SpectaclesWebShop.Bean.TaxDetails;
 import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.Dao.ShopDetailsDao;
 import com.example.SpectaclesWebShop.Helper.JwtUtil;
@@ -72,6 +74,24 @@ public class LoadDetailsController {
             List<Carousel> carouselImages = shopDetailsDao.getCarouselImages();
 
             return ResponseEntity.ok(carouselImages);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @GetMapping("/load/pricingDetails")
+    public ResponseEntity<?> getPricingDetails() {
+        try {
+            List<GlassPrice> glassPrices = shopDetailsDao.getGlassDetails();
+            List<TaxDetails> taxDetails = shopDetailsDao.getTaxDetails();
+
+            HashMap<String, Object> map = new HashMap<>();
+
+            map.put("GlassPricing", glassPrices);
+            map.put("taxDetails", taxDetails);
+
+            return ResponseEntity.ok(map);
         } catch (Exception e) {
             e.printStackTrace();
         }

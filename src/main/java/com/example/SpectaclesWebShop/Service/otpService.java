@@ -24,24 +24,25 @@ public class otpService {
 
         });
     }
-    public int GenerateOtp(String key){
+
+    public int GenerateOtp(String key) {
 
         Random random = new Random();
         int otp = 100000 + random.nextInt(900000);
-        this.otpCache.put(key,otp);
+        this.otpCache.put(key, otp);
         return otp;
     }
 
-    public int getOtp(String key){
-        try{
+    public int getOtp(String key) {
+        try {
             return (int) otpCache.get(key);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return 0;
     }
 
-    public void clearOTP(String key){
-        this.otpCache.put(key,0);
+    public void clearOTP(String key) {
+        this.otpCache.put(key, 0);
     }
 }

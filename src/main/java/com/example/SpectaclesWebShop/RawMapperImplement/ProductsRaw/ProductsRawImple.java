@@ -17,6 +17,7 @@ public class ProductsRawImple implements RowMapper<Products> {
               products.setP_name(rs.getString("P_NAME"));
               products.setP_price(rs.getDouble("P_PRICE"));
               products.setBannerImage(rs.getString("BANNER_IMAGE"));
+
               products.setRating(rs.getDouble("RATING"));
               return products;
        }
