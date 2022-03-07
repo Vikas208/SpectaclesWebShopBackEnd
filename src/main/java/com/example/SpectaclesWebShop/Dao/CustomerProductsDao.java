@@ -2,9 +2,8 @@ package com.example.SpectaclesWebShop.Dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
-
-import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
 
 import com.example.SpectaclesWebShop.Bean.CustomersProductsDetails;
 import com.example.SpectaclesWebShop.Bean.Products;
@@ -14,7 +13,7 @@ import com.example.SpectaclesWebShop.Info.TableName;
 import com.example.SpectaclesWebShop.RawMapperImplement.CustomerProductsRaw.CustomerProductRawImplement;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -55,7 +54,7 @@ public class CustomerProductsDao implements CustomerProductsInterface {
                      String query = "INSERT INTO " + TableName.CUSTOMER_CART
                                    + " (C_ID,P_ID) VALUES (?,?)";
 
-                     return jdbcTemplate.update(query, customersProductsDetails.getC_id(),
+                     return jdbcTemplate.update(query, customersProductsDetails.getcommon_id(),
                                    customersProductsDetails.getP_id());
               } catch (Exception e) {
                      e.printStackTrace();
@@ -69,8 +68,8 @@ public class CustomerProductsDao implements CustomerProductsInterface {
                      String query = "INSERT INTO " + TableName.CUSTOMER_WISHLIST
                                    + " (C_ID,P_ID) SELECT * FROM (SELECT ? AS C_ID ,? AS P_ID) AS TEMP WHERE NOT EXISTS (SELECT C_ID,P_ID FROM "
                                    + TableName.CUSTOMER_WISHLIST + " WHERE C_ID=? AND P_ID=?) LIMIT 1";
-                     return jdbcTemplate.update(query, customersProductsDetails.getC_id(),
-                                   customersProductsDetails.getP_id(), customersProductsDetails.getC_id(),
+                     return jdbcTemplate.update(query, customersProductsDetails.getcommon_id(),
+                                   customersProductsDetails.getP_id(), customersProductsDetails.getcommon_id(),
                                    customersProductsDetails.getP_id());
               } catch (Exception e) {
                      e.printStackTrace();
@@ -86,6 +85,7 @@ public class CustomerProductsDao implements CustomerProductsInterface {
                                    + TableName.PRODUCTS + " P LEFT JOIN (SELECT P_ID,OFF_AMOUNT,PERCENTAGE FROM "
                                    + TableName.PRODUCT_SALES
                                    + " WHERE E_DATE>=current_date()) PS ON P.P_ID=PS.P_ID) P ON CC.P_ID = P.P_ID WHERE C_ID = ? limit 5 offset ?";
+
                      RowMapper<CustomersProductsDetails> cMapper = new CustomerProductRawImplement();
                      return jdbcTemplate.query(query, cMapper, c_id, offset);
               } catch (Exception e) {
@@ -108,7 +108,7 @@ public class CustomerProductsDao implements CustomerProductsInterface {
                                    CustomersProductsDetails customersProductsDetails = new CustomersProductsDetails();
                                    Products products = new Products();
                                    customersProductsDetails.setId(rs.getLong("CW_ID"));
-                                   customersProductsDetails.setC_id(rs.getLong("C_ID"));
+                                   customersProductsDetails.setcommon_id(rs.getLong("C_ID"));
                                    customersProductsDetails.setP_id(rs.getLong("P_ID"));
 
                                    products.setId(rs.getLong("P_ID"));
@@ -173,8 +173,7 @@ public class CustomerProductsDao implements CustomerProductsInterface {
        public int countTotalProductsInCart(long c_id) {
               try {
                      String query = "SELECT COUNT(CC_ID) FROM " + TableName.CUSTOMER_CART + " WHERE C_ID=?";
-                     int legnth = jdbcTemplate.queryForObject(query, Integer.class, c_id);
-                     return legnth;
+                     return jdbcTemplate.queryForObject(query, Integer.class, c_id);
               } catch (Exception e) {
                      e.printStackTrace();
               }
@@ -185,12 +184,46 @@ public class CustomerProductsDao implements CustomerProductsInterface {
        public int countTotalProductsInWishList(long c_id) {
               try {
                      String query = "SELECT COUNT(CW_ID) FROM " + TableName.CUSTOMER_WISHLIST + " WHERE C_ID=?";
-                     int legnth = jdbcTemplate.queryForObject(query, Integer.class, c_id);
-                     return legnth;
+                     return jdbcTemplate.queryForObject(query, Integer.class, c_id);
+
               } catch (Exception e) {
                      e.printStackTrace();
               }
               return Code.ERROR_CODE;
+       }
+
+       @Override
+       public List<HashMap<String, Object>> getBillingInformation(long c_id) {
+              try {
+                     String query = "select CC.C_ID,sum(CC.QTY * ((P.P_PRICE - IF(PS.E_DATE < CURRENT_DATE(),0,PS.OFF_AMOUNT) - (P.P_PRICE * IF(PS.E_DATE < CURRENT_DATE(),0,PS.PERCENTAGE) / 100) )+ IF(isnull(GP.GLASS_NAME),0,GP.PRICE)+ (P.P_PRICE * (IF(isnull(TD.GST),0,TD.GST)/100))+ (P.P_PRICE * IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100)))'PRICE' , sum(P.P_PRICE * (IF(ISNULL(TD.GST),0,TD.GST)/100))'GST',sum(P.P_PRICE * (IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100))'OTHER_TAX' from "
+                                   + TableName.CUSTOMER_CART + " CC LEFT JOIN " + TableName.PRODUCTS
+                                   + " P ON CC.P_ID=P.P_ID LEFT JOIN " + TableName.PRODUCT_SALES
+                                   + " PS ON CC.P_ID = PS.P_ID LEFT JOIN " + TableName.GLASSPRICE
+                                   + " GP ON GP.GLASS_NAME = CC.GLASSTYPE LEFT JOIN " + TableName.TAX_DATABASE
+                                   + " TD ON TD.CATEGORY_NAME = P.P_CATEGORY WHERE CC.C_ID = ? group by CC.C_ID";
+
+                     RowMapper<HashMap<String, Object>> mapper = new RowMapper<HashMap<String, Object>>() {
+
+                            @Override
+                            public HashMap<String, Object> mapRow(ResultSet rs, int rowNum) throws SQLException {
+
+                                   HashMap<String, Object> map = new HashMap<String, Object>();
+
+                                   map.put("c_id", rs.getLong("C_ID"));
+                                   map.put("totalprice", rs.getDouble("PRICE"));
+                                   map.put("gst", rs.getDouble("GST"));
+                                   map.put("othertax", rs.getDouble("OTHER_TAX"));
+
+                                   return map;
+                            }
+                     };
+
+                     return jdbcTemplate.query(query, mapper, c_id);
+
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return null;
        }
 
 }

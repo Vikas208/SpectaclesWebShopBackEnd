@@ -2,7 +2,7 @@ package com.example.SpectaclesWebShop.Bean;
 
 public class CustomersProductsDetails {
        private long id;
-       private long c_id;
+       private long common_id; // c_id order_id
        private long p_id;
        private int qty;
        private boolean onlyframe;
@@ -11,11 +11,12 @@ public class CustomersProductsDetails {
        private double right_eye_no;
        private Products products;
 
-       public CustomersProductsDetails(long id, long c_id, long p_id, int qty, boolean onlyframe, double left_eye_no,
+       public CustomersProductsDetails(long id, long common_id, long p_id, int qty, boolean onlyframe,
+                     double left_eye_no,
                      double right_eye_no,
                      Products products, String glassType) {
               this.id = id;
-              this.c_id = c_id;
+              this.common_id = common_id;
               this.p_id = p_id;
               this.qty = qty;
               this.onlyframe = onlyframe;
@@ -52,12 +53,12 @@ public class CustomersProductsDetails {
               this.id = id;
        }
 
-       public long getC_id() {
-              return c_id;
+       public long getcommon_id() {
+              return common_id;
        }
 
-       public void setC_id(long c_id) {
-              this.c_id = c_id;
+       public void setcommon_id(long common_id) {
+              this.common_id = common_id;
        }
 
        public long getP_id() {

@@ -2,12 +2,11 @@ package com.example.SpectaclesWebShop.Controller;
 
 import java.util.HashMap;
 import java.util.List;
-
 import com.example.SpectaclesWebShop.Bean.Carousel;
-import com.example.SpectaclesWebShop.Bean.GlassPrice;
+import com.example.SpectaclesWebShop.Bean.GlassType;
 import com.example.SpectaclesWebShop.Bean.Login;
+import com.example.SpectaclesWebShop.Bean.ShippingCharge;
 import com.example.SpectaclesWebShop.Bean.ShopDetails;
-import com.example.SpectaclesWebShop.Bean.TaxDetails;
 import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.Dao.ShopDetailsDao;
 import com.example.SpectaclesWebShop.Helper.JwtUtil;
@@ -80,21 +79,26 @@ public class LoadDetailsController {
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @GetMapping("/load/pricingDetails")
-    public ResponseEntity<?> getPricingDetails() {
+    @GetMapping("/shippingCharges")
+    public ResponseEntity<?> getShippingCharges() {
         try {
-            List<GlassPrice> glassPrices = shopDetailsDao.getGlassDetails();
-            List<TaxDetails> taxDetails = shopDetailsDao.getTaxDetails();
-
-            HashMap<String, Object> map = new HashMap<>();
-
-            map.put("GlassPricing", glassPrices);
-            map.put("taxDetails", taxDetails);
-
-            return ResponseEntity.ok(map);
+            ShippingCharge shippingCharge = shopDetailsDao.getShippingCharge();
+            return ResponseEntity.ok(shippingCharge);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @GetMapping("/glassCharges")
+    public ResponseEntity<?> getglassCharges() {
+        try {
+            List<GlassType> glassCharges = shopDetailsDao.getGlassPricing();
+            return ResponseEntity.ok(glassCharges);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 }

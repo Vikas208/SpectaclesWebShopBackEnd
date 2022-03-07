@@ -2,8 +2,9 @@ package com.example.SpectaclesWebShop.Dao;
 
 import com.example.SpectaclesWebShop.Bean.Data;
 import com.example.SpectaclesWebShop.Bean.FeedBack;
-
+import com.example.SpectaclesWebShop.Bean.ProductDescription;
 import com.example.SpectaclesWebShop.Bean.ProductImage;
+import com.example.SpectaclesWebShop.Bean.ProductSales;
 import com.example.SpectaclesWebShop.Bean.Products;
 import com.example.SpectaclesWebShop.DaoInterfaces.ProductsInterface;
 import com.example.SpectaclesWebShop.Info.Code;
@@ -58,31 +59,11 @@ public class ProductsDao implements ProductsInterface {
                 + TableName.PRODUCTS + "(P_ID) ON DELETE CASCADE,CHECK(S_DATE<=E_DATE))";
     }
 
-    // Category DataBase
-    public String createCategoryTable() {
-        return "CREATE TABLE IF NOT EXISTS " + TableName.CATEGORY
-                + " (CAT_ID INT AUTO_INCREMENT PRIMARY KEY,CATEGORYNAME VARCHAR(50) NOT NULL UNIQUE)";
-    }
-
-    // FrameStyle DataBase
-    public String createFrameStyleTable() {
-        return "CREATE TABLE IF NOT EXISTS " + TableName.FRAME_STYLE
-                + " (FRAME_ID INT AUTO_INCREMENT PRIMARY KEY,FRAMENAME VARCHAR(50) NOT NULL UNIQUE)";
-    }
-
-    // Company Name DataBase
-    public String createCompanyNameTable() {
-        return "CREATE TABLE IF NOT EXISTS " + TableName.COMPANY_NAME
-                + " (COMPANY_ID INT AUTO_INCREMENT PRIMARY KEY,COMPANY_NAME VARCHAR(50)NOT NULL UNIQUE)";
-    }
     //
 
     @Override
     public void createDataBase() {
         try {
-            jdbcTemplate.update(createCategoryTable());
-            jdbcTemplate.update(createFrameStyleTable());
-            jdbcTemplate.update(createCompanyNameTable());
             jdbcTemplate.update(createProductDatabase());
             jdbcTemplate.update(createReviewDatabase());
             jdbcTemplate.update(CreateProductImagesDatabase());
@@ -200,8 +181,8 @@ public class ProductsDao implements ProductsInterface {
         try {
             String query = "select distinct * from " + TableName.PRODUCTS
                     + " P left join (select P_ID,AVG(RATING)'RATING' FROM "
-                    + TableName.REVIEWS + " GROUP BY(P_ID))PR ON P.P_ID=PR.P_ID  WHERE P_NAME regexp ('" + searchQuery
-                    + "') or P_FRAMESTYLE regexp ('" + searchQuery + "') or COMPANY_NAME REGEXP ('" + searchQuery
+                    + TableName.REVIEWS + " GROUP BY(P_ID))PR ON P.P_ID=PR.P_ID  WHERE P_NAME like '%" + searchQuery
+                    + "%' or P_FRAMESTYLE regexp ('" + searchQuery + "') or COMPANY_NAME REGEXP ('" + searchQuery
                     + "') or P_CATEGORY regexp ('" + searchQuery + "') LIMIT 15 OFFSET ?";
             RowMapper<Products> productsRowMapper = new ProductsRawImple();
             return jdbcTemplate.query(query, productsRowMapper, offset);
@@ -214,8 +195,8 @@ public class ProductsDao implements ProductsInterface {
     @Override
     public int countSearchedProducts(String searchQuery) {
         try {
-            String query = "select count(P_ID) from " + TableName.PRODUCTS + " WHERE P_NAME regexp ('" + searchQuery
-                    + "') or P_FRAMESTYLE regexp ('" + searchQuery + "') or COMPANY_NAME REGEXP ('" + searchQuery
+            String query = "select count(P_ID) from " + TableName.PRODUCTS + " WHERE P_NAME regexp '%" + searchQuery
+                    + "%' or P_FRAMESTYLE regexp ('" + searchQuery + "') or COMPANY_NAME REGEXP ('" + searchQuery
                     + "') or P_CATEGORY regexp ('" + searchQuery + "')";
             return jdbcTemplate.queryForObject(query, Integer.class);
         } catch (Exception e) {
@@ -276,9 +257,9 @@ public class ProductsDao implements ProductsInterface {
                     + category + "') and P_FRAMESTYLE regexp ('" + frameStyle
                     + "')  and COMPANY_NAME regexp ('" + companyname + "') and P_GROUP regexp ('"
                     + group + "') and FRAMESIZE regexp('" + framesize + "') and " + priceQuery
-                    + " and (P_NAME regexp ('"
+                    + " and (P_NAME like '%"
                     + name
-                    + "') or P_FRAMESTYLE regexp ('" + name + "') or COMPANY_NAME REGEXP ('" + name
+                    + "%' or P_FRAMESTYLE regexp ('" + name + "') or COMPANY_NAME REGEXP ('" + name
                     + "') or P_CATEGORY regexp ('" + name + "') or P_GROUP regexp ('" + name + "')) LIMIT 15 OFFSET ?";
 
             RowMapper<Products> pRowMapper = new ProductsRawImple();
@@ -306,8 +287,8 @@ public class ProductsDao implements ProductsInterface {
                     + "')  and COMPANY_NAME regexp ('" + companyname + "') and P_GROUP regexp ('"
                     + group + "')  and FRAMESIZE regexp('" + framesize
                     + "') and " + priceQuery
-                    + " and (P_NAME regexp ('" + name
-                    + "') or P_FRAMESTYLE regexp ('" + name + "') or COMPANY_NAME REGEXP ('" + name
+                    + " and (P_NAME like '%" + name
+                    + "%' or P_FRAMESTYLE regexp ('" + name + "') or COMPANY_NAME REGEXP ('" + name
                     + "') or P_CATEGORY regexp ('" + name + "') or P_GROUP regexp ('" + name + "'))";
             return jdbcTemplate.queryForObject(query, Integer.class);
 
@@ -315,6 +296,46 @@ public class ProductsDao implements ProductsInterface {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    @Override
+    public Products getOrderedProduct(long p_id) {
+        try {
+            String query = "select P.P_ID,P_NAME,P_PRICE,BANNER_IMAGE,P_STOCK,P_CATEGORY,OFF_AMOUNT,PERCENTAGE from "
+                    + TableName.PRODUCTS + " P LEFT JOIN (SELECT * FROM "
+                    + TableName.PRODUCT_SALES + " WHERE E_DATE>=current_date()) PS  ON P.P_ID = PS.P_ID WHERE P.P_ID=?";
+
+            RowMapper<Products> pMapper = new RowMapper<Products>() {
+
+                @Override
+                public Products mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    Products products = new Products();
+                    ProductDescription productDescription = new ProductDescription();
+                    ProductSales productSales = new ProductSales();
+
+                    products.setId(rs.getLong("P_ID"));
+                    products.setP_name(rs.getString("P_NAME"));
+                    products.setP_price(rs.getDouble("P_PRICE"));
+                    products.setBannerImage(rs.getString("BANNER_IMAGE"));
+                    products.setP_stock(rs.getInt("P_STOCK"));
+
+                    productDescription.setP_category(rs.getString("P_CATEGORY"));
+
+                    productSales.setSaleOff(rs.getDouble("OFF_AMOUNT"));
+                    productSales.setSalePercentage(rs.getDouble("PERCENTAGE"));
+
+                    products.setProductDescription(productDescription);
+                    products.setProductSales(productSales);
+
+                    return products;
+                }
+
+            };
+            return jdbcTemplate.queryForObject(query, pMapper, p_id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

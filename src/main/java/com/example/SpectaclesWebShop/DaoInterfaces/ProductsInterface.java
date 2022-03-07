@@ -43,4 +43,6 @@ public interface ProductsInterface {
                         String group,
                         String framesize, double sprice, double eprice);
 
+        public Products getOrderedProduct(long p_id);
+
 }

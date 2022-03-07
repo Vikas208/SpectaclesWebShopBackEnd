@@ -1,5 +1,6 @@
 package com.example.SpectaclesWebShop.Controller;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 
@@ -103,7 +104,9 @@ public class CustomerProductsController {
        }
 
        @GetMapping("/getCustomerCart")
-       public ResponseEntity<?> GetCustomerCart(@RequestParam("userId") long c_id, @RequestParam("offset") int offset) {
+       public ResponseEntity<?> GetCustomerCart(@RequestParam("userId") long c_id,
+
+                     @RequestParam("offset") int offset) {
               try {
                      List<CustomersProductsDetails> products = customerProductsDao.getCustomerCart(c_id, offset);
                      return ResponseEntity.ok(products);
@@ -150,4 +153,18 @@ public class CustomerProductsController {
               }
               return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
        }
+
+       @GetMapping("/getBillingPricing")
+       public ResponseEntity<?> getBillingPricing(@RequestParam("userId") long userId) {
+              try {
+                     List<HashMap<String, Object>> pricing = customerProductsDao.getBillingInformation(userId);
+                     // HashMap<String, Object> map = new HashMap<String, Object>();
+                     // map.put("Pricing", pricing);
+                     return ResponseEntity.ok(pricing);
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
+       }
+
 }

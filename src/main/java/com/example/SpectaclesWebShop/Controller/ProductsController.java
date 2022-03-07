@@ -214,4 +214,19 @@ public class ProductsController {
         return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
     }
 
+    @GetMapping("/getOrderedProductDetails")
+    public ResponseEntity<?> getOrderedProductDetails(@RequestParam("userId") long p_id) {
+        try {
+            Products products = productsDao.getOrderedProduct(p_id);
+            if (products != null) {
+
+                return ResponseEntity.ok(products);
+            }
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+        return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+
+    }
 }

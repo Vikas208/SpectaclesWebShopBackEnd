@@ -1,9 +1,10 @@
 package com.example.SpectaclesWebShop.Dao;
 
 import com.example.SpectaclesWebShop.Bean.Carousel;
-import com.example.SpectaclesWebShop.Bean.GlassPrice;
+import com.example.SpectaclesWebShop.Bean.GlassType;
+import com.example.SpectaclesWebShop.Bean.ShippingCharge;
 import com.example.SpectaclesWebShop.Bean.ShopDetails;
-import com.example.SpectaclesWebShop.Bean.TaxDetails;
+
 import com.example.SpectaclesWebShop.Info.Code;
 import com.example.SpectaclesWebShop.Info.TableName;
 import com.example.SpectaclesWebShop.DaoInterfaces.ShopDetailsInterface;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 
 @Repository
@@ -52,8 +52,32 @@ public class ShopDetailsDao implements ShopDetailsInterface {
                 + TableName.CATEGORY + " (CATEGORYNAME))";
     }
 
-    private String CreateGlassPriceDataBase(){
-        return  "CREATE TABLE IF NOT EXISTS "+TableName.GLASSPRICE+" (G_ID INT AUTO_INCREMENT PRIMARY KEY,GLASS_NAME VARCHAR(10) NOT NULL,PRICE DOUBLE NOT NULL)";
+    private String CreateGlassPriceDataBase() {
+        return "CREATE TABLE IF NOT EXISTS " + TableName.GLASSPRICE
+                + " (G_ID INT AUTO_INCREMENT PRIMARY KEY,GLASS_NAME VARCHAR(10) NOT NULL,PRICE DOUBLE NOT NULL)";
+    }
+
+    // Category DataBase
+    public String createCategoryTable() {
+        return "CREATE TABLE IF NOT EXISTS " + TableName.CATEGORY
+                + " (CAT_ID INT AUTO_INCREMENT PRIMARY KEY,CATEGORYNAME VARCHAR(50) NOT NULL UNIQUE)";
+    }
+
+    // FrameStyle DataBase
+    public String createFrameStyleTable() {
+        return "CREATE TABLE IF NOT EXISTS " + TableName.FRAME_STYLE
+                + " (FRAME_ID INT AUTO_INCREMENT PRIMARY KEY,FRAMENAME VARCHAR(50) NOT NULL UNIQUE)";
+    }
+
+    // Company Name DataBase
+    public String createCompanyNameTable() {
+        return "CREATE TABLE IF NOT EXISTS " + TableName.COMPANY_NAME
+                + " (COMPANY_ID INT AUTO_INCREMENT PRIMARY KEY,COMPANY_NAME VARCHAR(50)NOT NULL UNIQUE)";
+    }
+
+    public String CreateOrderServiceTable() {
+        return "CREATE TABLE IF NOT EXISTS " + TableName.ORDERSERVICE
+                + " (ID INT AUTO_INCREMENT PRIMARY KEY,SERVICE_PERSON VARCHAR(50) NOT NULL,PHONENUMBER VARCHAR(10) NOT NULL)";
     }
 
     @Override
@@ -64,6 +88,10 @@ public class ShopDetailsDao implements ShopDetailsInterface {
             jdbcTemplate.update(CreateShippingChargesDataBase());
             jdbcTemplate.update(CreateTaxDataBase());
             jdbcTemplate.update(CreateGlassPriceDataBase());
+            jdbcTemplate.update(createCategoryTable());
+            jdbcTemplate.update(createFrameStyleTable());
+            jdbcTemplate.update(createCompanyNameTable());
+            jdbcTemplate.update(CreateOrderServiceTable());
             return Code.SUCCESS;
         } catch (Exception e) {
             e.printStackTrace();
@@ -81,7 +109,7 @@ public class ShopDetailsDao implements ShopDetailsInterface {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return new ShopDetails();
     }
 
     @Override
@@ -97,43 +125,50 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     }
 
     @Override
-    public List<GlassPrice> getGlassDetails() {
-        try{
-            String query = "SELECT * FROM "+TableName.GLASSPRICE;
-            RowMapper<GlassPrice> mapper = new RowMapper<GlassPrice>() {
+    public ShippingCharge getShippingCharge() {
+        try {
+            String query = "SELECT * FROM " + TableName.SHIPPING_CHARGES;
+            RowMapper<ShippingCharge> sMapper = new RowMapper<ShippingCharge>() {
+
                 @Override
-                public GlassPrice mapRow(ResultSet rs, int rowNum) throws SQLException {
-                    GlassPrice glassPrice = new GlassPrice(rs.getLong("G_ID"),rs.getString("GLASS_NAME"),rs.getDouble("PRICE"));
-                    return  glassPrice;
+                public ShippingCharge mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    ShippingCharge shippingCharge = new ShippingCharge();
+                    shippingCharge.setId(rs.getLong("ID"));
+                    shippingCharge.setCharge(rs.getDouble("CHARGE"));
+                    shippingCharge.setMax(rs.getInt("MAX_QTY"));
+                    return shippingCharge;
                 }
             };
-            return  jdbcTemplate.query(query,mapper);
-        }catch (Exception e){
+            ShippingCharge shippingCharge = jdbcTemplate.queryForObject(query, sMapper);
+            return shippingCharge;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ShippingCharge();
+    }
+
+    @Override
+    public List<GlassType> getGlassPricing() {
+        try {
+            String query = "select * from " + TableName.GLASSPRICE;
+            RowMapper<GlassType> gMapper = new RowMapper<GlassType>() {
+
+                @Override
+                public GlassType mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    GlassType glassType = new GlassType();
+                    glassType.setId(rs.getLong("ID"));
+                    glassType.setGlass_name(rs.getString("GLASS_NAME"));
+                    glassType.setPrice(rs.getDouble("PRICE"));
+                    return glassType;
+                }
+            };
+            return jdbcTemplate.query(query, gMapper);
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    @Override
-    public List<TaxDetails> getTaxDetails() {
-        try{
-            String query = "SELECT * FROM "+TableName.TAX_DATABASE;
-            RowMapper<TaxDetails> taxDetailsRowMapper = new RowMapper<TaxDetails>() {
-                @Override
-                public TaxDetails mapRow(ResultSet rs, int rowNum) throws SQLException {
-                    TaxDetails taxDetails = new TaxDetails(
-                            rs.getLong("ID"),
-                            rs.getString("CATEGORY_NAME"),
-                            rs.getDouble("GST"),
-                            rs.getDouble("OTHER_TAX")
-                    );
-                    return  taxDetails;
-                }
-            };
-            return  jdbcTemplate.query(query,taxDetailsRowMapper);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return  null;
-    }
 }

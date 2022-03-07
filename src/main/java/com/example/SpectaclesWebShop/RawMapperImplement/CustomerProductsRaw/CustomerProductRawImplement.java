@@ -21,7 +21,7 @@ public class CustomerProductRawImplement implements RowMapper<CustomersProductsD
               ProductSales productSales = new ProductSales();
 
               customersProductsDetails.setId(rs.getLong("CC_ID"));
-              customersProductsDetails.setC_id(rs.getLong("C_ID"));
+              customersProductsDetails.setcommon_id(rs.getLong("C_ID"));
               customersProductsDetails.setP_id(rs.getLong("P_ID"));
               customersProductsDetails.setQty(rs.getInt("QTY"));
               customersProductsDetails.setOnlyframe(rs.getBoolean("ONLYFRAME"));

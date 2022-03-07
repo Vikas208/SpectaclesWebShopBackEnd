@@ -1,5 +1,7 @@
 package com.example.SpectaclesWebShop.DaoInterfaces;
 
+import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
 
 import com.example.SpectaclesWebShop.Bean.CustomersProductsDetails;
@@ -25,4 +27,7 @@ public interface CustomerProductsInterface {
 
        public int countTotalProductsInWishList(long c_id);
 
+       public List<HashMap<String, Object>> getBillingInformation(long c_id);
+
 }
+// c_id glassType onlyFrame p_id p_price saleDetails

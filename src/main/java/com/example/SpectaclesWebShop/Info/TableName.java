@@ -16,5 +16,10 @@ public class TableName {
     public static final String SHIPPING_CHARGES = "SHIPPING_CHARGES";
     public static final String TAX_DATABASE = "TAXDATABASE";
     public static final String GLASSPRICE = "GLASSPRICE";
+    public static final String ORDERADDRESS = "ORDERADDRESS";
+    public static final String ORDEREDPRODUCTS = "ORDEREDPRODUCTS";
+    public static final String ORDER = "CUSTOMERORDER";
+    public static final String ORDERPAYMENT = "ORDERPAYMENT";
+    public static final String ORDERSERVICE = "ORDERSERVICE";
 
 }
