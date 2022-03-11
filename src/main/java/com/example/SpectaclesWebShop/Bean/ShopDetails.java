@@ -1,5 +1,7 @@
 package com.example.SpectaclesWebShop.Bean;
 
+
+
 public class ShopDetails {
     private String shopName;
     private Address address;
@@ -8,12 +10,12 @@ public class ShopDetails {
     private static final String public_id = "ShopDetails/logo.jpg";
     private String logoUrl;
 
-    public ShopDetails(String shopName, Address address, String phoneNumber, String mailId,String url) {
+    public ShopDetails(String shopName, Address address, String phoneNumber, String mailId, String url) {
         this.shopName = shopName;
         this.address = address;
         this.phoneNumber = phoneNumber;
         this.mailId = mailId;
-        this.logoUrl =url;
+        this.logoUrl = url;
     }
 
     public String getPublic_id() {
@@ -30,6 +32,7 @@ public class ShopDetails {
 
     public ShopDetails() {
     }
+
     public String getShopName() {
         return shopName;
     }

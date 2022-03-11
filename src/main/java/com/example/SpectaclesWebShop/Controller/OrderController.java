@@ -149,4 +149,16 @@ public class OrderController {
 
        }
 
+       @GetMapping("/getShopNowProduct")
+       public ResponseEntity<?> getShopNowProduct(@RequestParam("p_id") long p_id, @RequestParam("qty") long qty,
+                     @RequestParam("glassType") String glassType) {
+              try {
+                     HashMap<String, Object> product = orderDao.getOrderedProduct(p_id, qty, glassType);
+                     return ResponseEntity.ok(product);
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+       }
+
 }

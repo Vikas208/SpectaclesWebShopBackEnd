@@ -4,11 +4,12 @@ import com.example.SpectaclesWebShop.Bean.CustomersProductsDetails;
 import com.example.SpectaclesWebShop.Bean.Order;
 import com.example.SpectaclesWebShop.Bean.OrderAddress;
 import com.example.SpectaclesWebShop.Bean.OrderPayment;
-import com.example.SpectaclesWebShop.Bean.Products;
 import com.example.SpectaclesWebShop.DaoInterfaces.OrderInteface;
 
 import com.example.SpectaclesWebShop.Info.Code;
 import com.example.SpectaclesWebShop.Info.TableName;
+
+import org.glassfish.jersey.internal.guava.Table;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -260,6 +261,7 @@ public class OrderDao implements OrderInteface {
               return new OrderAddress();
        }
 
+       // fetch products from cart
        @Override
        public List<HashMap<String, Object>> getOrderedDetails(long c_id) {
               try {
@@ -286,6 +288,41 @@ public class OrderDao implements OrderInteface {
                      };
                      return jdbcTemplate.query(query, mapper, c_id);
 
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return null;
+       }
+
+       // fetch products from products for show now only one product
+       @Override
+       public HashMap<String, Object> getOrderedProduct(long p_id, long qty, String glassType) {
+              try {
+                     String query = "select P.P_ID,P_NAME,BANNER_IMAGE,P_CATEGORY,P_STOCK,(?*(P_PRICE - IF(PS.E_DATE>current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100))) + if(isnull(GLASS_NAME),0,GP.PRICE) + IF(isnull(TD.CATEGORY_NAME),0,((P_PRICE*(TD.GST/100))+(P_PRICE*(TD.OTHER_TAX/100))))))'PRICE',IF(isnull(TD.GST),0,TD.GST)'GST',IF(isnull(TD.OTHER_TAX),0,TD.OTHER_TAX)'OTHER_TAX' FROM "
+                                   + TableName.PRODUCTS + " P LEFT JOIN " + TableName.PRODUCT_SALES
+                                   + " PS ON P.P_ID=PS.P_ID LEFT JOIN " + TableName.GLASSPRICE
+                                   + " GP ON GP.GLASS_NAME=? LEFT JOIN " + TableName.TAX_DATABASE
+                                   + " TD ON TD.CATEGORY_NAME = P.P_CATEGORY WHERE P.P_ID=?";
+                     RowMapper<HashMap<String, Object>> mapper = new RowMapper<HashMap<String, Object>>() {
+
+                            @Override
+                            public HashMap<String, Object> mapRow(ResultSet rs, int rowNum) throws SQLException {
+
+                                   HashMap<String, Object> map = new HashMap<>();
+                                   map.put("ProductId", rs.getLong("P_ID"));
+                                   map.put("ProductName", rs.getString("P_NAME"));
+                                   map.put("TotalPrice", rs.getDouble("PRICE"));
+                                   map.put("GST", rs.getDouble("GST"));
+                                   map.put("OTHERTAX", rs.getDouble("OTHER_TAX"));
+                                   map.put("QTY", qty);
+
+                                   return map;
+                            }
+
+                     };
+
+                     return jdbcTemplate.queryForObject(query, mapper, qty,
+                                   glassType, p_id);
               } catch (Exception e) {
                      e.printStackTrace();
               }

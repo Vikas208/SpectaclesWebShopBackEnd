@@ -151,15 +151,15 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     @Override
     public List<GlassType> getGlassPricing() {
         try {
-            String query = "select * from " + TableName.GLASSPRICE;
+            String query = "select G_ID,GLASS_NAME from " + TableName.GLASSPRICE;
             RowMapper<GlassType> gMapper = new RowMapper<GlassType>() {
 
                 @Override
                 public GlassType mapRow(ResultSet rs, int rowNum) throws SQLException {
                     GlassType glassType = new GlassType();
-                    glassType.setId(rs.getLong("ID"));
+                    glassType.setId(rs.getLong("G_ID"));
                     glassType.setGlass_name(rs.getString("GLASS_NAME"));
-                    glassType.setPrice(rs.getDouble("PRICE"));
+                    // glassType.setPrice(rs.getDouble("PRICE"));
                     return glassType;
                 }
             };

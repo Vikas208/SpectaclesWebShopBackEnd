@@ -37,4 +37,5 @@ public interface OrderInteface {
 
        public List<HashMap<String, Object>> getOrderedDetails(long c_id);
 
+       public HashMap<String, Object> getOrderedProduct(long p_id, long qty, String glassType);
 }

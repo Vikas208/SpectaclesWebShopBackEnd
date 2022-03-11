@@ -301,9 +301,9 @@ public class ProductsDao implements ProductsInterface {
     @Override
     public Products getOrderedProduct(long p_id) {
         try {
-            String query = "select P.P_ID,P_NAME,P_PRICE,BANNER_IMAGE,P_STOCK,P_CATEGORY,OFF_AMOUNT,PERCENTAGE from "
+            String query = "select P.P_ID,P_NAME,(P_PRICE - IF(PS.E_DATE>current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100))))'PRICE',BANNER_IMAGE,P_STOCK,P_CATEGORY from "
                     + TableName.PRODUCTS + " P LEFT JOIN (SELECT * FROM "
-                    + TableName.PRODUCT_SALES + " WHERE E_DATE>=current_date()) PS  ON P.P_ID = PS.P_ID WHERE P.P_ID=?";
+                    + TableName.PRODUCT_SALES + ") PS  ON P.P_ID = PS.P_ID WHERE P.P_ID=?";
 
             RowMapper<Products> pMapper = new RowMapper<Products>() {
 
@@ -315,14 +315,11 @@ public class ProductsDao implements ProductsInterface {
 
                     products.setId(rs.getLong("P_ID"));
                     products.setP_name(rs.getString("P_NAME"));
-                    products.setP_price(rs.getDouble("P_PRICE"));
+                    products.setP_price(rs.getDouble("PRICE"));
                     products.setBannerImage(rs.getString("BANNER_IMAGE"));
                     products.setP_stock(rs.getInt("P_STOCK"));
 
                     productDescription.setP_category(rs.getString("P_CATEGORY"));
-
-                    productSales.setSaleOff(rs.getDouble("OFF_AMOUNT"));
-                    productSales.setSalePercentage(rs.getDouble("PERCENTAGE"));
 
                     products.setProductDescription(productDescription);
                     products.setProductSales(productSales);
