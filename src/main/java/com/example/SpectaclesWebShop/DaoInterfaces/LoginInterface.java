@@ -18,4 +18,6 @@ public interface LoginInterface {
     Login findByMailId(String mailId);
 
     int ChangeName(Login l);
+
+    Login findById(long id);
 }

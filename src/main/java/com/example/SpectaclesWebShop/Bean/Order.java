@@ -1,7 +1,7 @@
 package com.example.SpectaclesWebShop.Bean;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.List;
 
 public class Order {
 
@@ -11,12 +11,14 @@ public class Order {
     private Double shipping_charges;
     private String order_status;
     private LocalDateTime localDateTime;
-
     private OrderAddress orderAddress;
     private OrderPayment orderPayment;
+    private List<OrderedProducts> orderedProducts;
     private Service service;
 
-    public Order(long order_id, long c_id, long service_id, Double shipping_charges, String order_status,LocalDateTime localDateTime,OrderPayment orderPayment,OrderAddress orderAddress,Service service) {
+    public Order(long order_id, long c_id, long service_id, Double shipping_charges, String order_status,
+            LocalDateTime localDateTime, OrderPayment orderPayment, OrderAddress orderAddress, Service service,
+            List<OrderedProducts> orderedProducts) {
         this.order_id = order_id;
         this.c_id = c_id;
         this.service_id = service_id;
@@ -24,12 +26,21 @@ public class Order {
         this.order_status = order_status;
         this.localDateTime = localDateTime;
         this.orderAddress = orderAddress;
-        this.orderPayment=  orderPayment;
-        this.service =service;
+        this.orderPayment = orderPayment;
+        this.service = service;
+        this.orderedProducts = orderedProducts;
     }
 
     public Order() {
 
+    }
+
+    public List<OrderedProducts> getOrderedProducts() {
+        return orderedProducts;
+    }
+
+    public void setOrderedProducts(List<OrderedProducts> orderedProducts) {
+        this.orderedProducts = orderedProducts;
     }
 
     public LocalDateTime getLocalDateTime() {
@@ -104,4 +115,3 @@ public class Order {
         this.order_status = order_status;
     }
 }
-

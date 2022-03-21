@@ -4,6 +4,7 @@ import com.example.SpectaclesWebShop.Bean.Login;
 import com.example.SpectaclesWebShop.Info.Code;
 import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.ServerResponse.ServerResponse;
+import com.example.SpectaclesWebShop.Service.CustomeUserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ public class UserController {
     @PostMapping("/validUser")
     public ResponseEntity<?> validateUser(@RequestBody Login login) {
         try {
+
             int res = userAuthController.authenticate(login.getMailId(), login.getPassword());
 
             if (res == Code.USER_NOT_EXIST) {

@@ -18,6 +18,7 @@ public class LoginRawMapperImple implements RowMapper<Login> {
         l.setMailId(rs.getString(2));
         l.setName(rs.getString(3));
         l.setPassword(rs.getString(4));
+        l.setHasRole(rs.getString(5));
         return l;
     }
 }

@@ -101,4 +101,11 @@ public class CustomersProductsDetails {
               this.products = products;
        }
 
+       @Override
+       public String toString() {
+              return "CustomersProductsDetails [common_id=" + common_id + ", glassType=" + glassType + ", id=" + id
+                            + ", left_eye_no=" + left_eye_no + ", onlyframe=" + onlyframe + ", p_id=" + p_id
+                            + ", products=" + products + ", qty=" + qty + ", right_eye_no=" + right_eye_no + "]";
+       }
+
 }

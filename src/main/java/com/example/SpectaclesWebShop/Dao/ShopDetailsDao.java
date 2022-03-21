@@ -30,12 +30,6 @@ public class ShopDetailsDao implements ShopDetailsInterface {
                 + " (ID INT PRIMARY KEY,SHOP_NAME VARCHAR(100) NOT NULL,ADDRESS VARCHAR(100) NOT NULL,CITY VARCHAR(30) NOT NULL,PINCODE VARCHAR(6) NOT NULL,PHONE_NUMBER JSON NOT NULL,MAIL_ID JSON NOT NULL,LOGO_URL VARCHAR(2000))";
     }
 
-    private String InsertQueryShopDetails() {
-
-        return "INSERT INTO " + TableName.SHOP_DETAILS
-                + " (ID,SHOP_NAME,ADDRESS,CITY,PINCODE,PHONE_NUMBER,MAIL_ID,LOGO_URL) VALUES(1,'Shree chasama ghar','263, Medical Complex, Sola Road,Naranpura Vistar','Ahmedabad','380013','[\"7927470104\",\"9638272444\"]','[\"shreechasamaghar263@gmail.com\"]','https://res.cloudinary.com/dyg4mksoz/image/upload/v1643353999/ShopDetails/Logo-removebg-preview_jmpsu6.png')";
-    }
-
     private String CreateCarouselTable() {
         return "CREATE TABLE IF NOT EXISTS " + TableName.CAROUSEL
                 + " (ID INT AUTO_INCREMENT PRIMARY KEY,IMAGE VARCHAR(2000))";
@@ -151,7 +145,7 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     @Override
     public List<GlassType> getGlassPricing() {
         try {
-            String query = "select G_ID,GLASS_NAME from " + TableName.GLASSPRICE;
+            String query = "select * from " + TableName.GLASSPRICE;
             RowMapper<GlassType> gMapper = new RowMapper<GlassType>() {
 
                 @Override
@@ -159,7 +153,7 @@ public class ShopDetailsDao implements ShopDetailsInterface {
                     GlassType glassType = new GlassType();
                     glassType.setId(rs.getLong("G_ID"));
                     glassType.setGlass_name(rs.getString("GLASS_NAME"));
-                    // glassType.setPrice(rs.getDouble("PRICE"));
+                    glassType.setPrice(rs.getDouble("PRICE"));
                     return glassType;
                 }
             };

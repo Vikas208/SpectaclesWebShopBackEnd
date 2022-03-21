@@ -9,6 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 @SpringBootApplication
 public class SpectaclesWebShopApplication implements CommandLineRunner {
@@ -31,6 +35,7 @@ public class SpectaclesWebShopApplication implements CommandLineRunner {
 		SpringApplication.run(SpectaclesWebShopApplication.class, args);
 	}
 
+
 	@Override
 	public void run(String... args) {
 		loginDao.createDataBase();
@@ -40,4 +45,5 @@ public class SpectaclesWebShopApplication implements CommandLineRunner {
 		orderDao.CreateDataBases();
 		System.out.println("App Started");
 	}
+
 }

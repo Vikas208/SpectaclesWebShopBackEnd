@@ -21,6 +21,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 
 @Repository
@@ -333,6 +334,34 @@ public class ProductsDao implements ProductsInterface {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public int updateProductStockAndSales(long p_id, int qty) {
+        try {
+            String query = "SELECT P_STOCK,TOTALSALES FROM " + TableName.PRODUCTS + " where P_ID=?";
+
+            RowMapper<Products> pMapper = new RowMapper<Products>() {
+
+                @Override
+                public Products mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    Products products = new Products();
+                    products.setP_stock(rs.getInt("P_STOCK"));
+                    products.setTotalSales(rs.getInt("TOTALSALES"));
+                    return products;
+                }
+
+            };
+            Products products = jdbcTemplate.queryForObject(query, pMapper, p_id);
+
+            query = "UPDATE " + TableName.PRODUCTS + " SET P_STOCK=?,TOTALSALES=? WHERE P_ID=?";
+
+            return jdbcTemplate.update(query, products.getP_stock() - qty, products.getTotalSales() + qty, p_id);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
 }

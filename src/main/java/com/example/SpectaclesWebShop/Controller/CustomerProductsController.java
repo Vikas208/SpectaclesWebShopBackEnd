@@ -1,6 +1,5 @@
 package com.example.SpectaclesWebShop.Controller;
 
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 

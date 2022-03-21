@@ -4,11 +4,14 @@ import com.example.SpectaclesWebShop.Bean.CustomersProductsDetails;
 import com.example.SpectaclesWebShop.Bean.Order;
 import com.example.SpectaclesWebShop.Bean.OrderAddress;
 import com.example.SpectaclesWebShop.Bean.OrderPayment;
+import com.example.SpectaclesWebShop.Bean.OrderedProducts;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public interface OrderInteface {
+
        public void CreateDataBases();
 
        public int createNewOrder(Order order);
@@ -19,9 +22,9 @@ public interface OrderInteface {
 
        public int updateOrderAddress(OrderAddress orderAddress);
 
-       public int addOrderProducts(CustomersProductsDetails customersProductsDetails);
+       public int addOrderProducts(ArrayList<OrderedProducts> orderedProducts);
 
-       public int updateOrderProducts(CustomersProductsDetails customersProductsDetails);
+       public int updateOrderProducts(OrderedProducts orderedProducts);
 
        public int deleteOrderedProducts(long product_id);
 
@@ -38,4 +41,6 @@ public interface OrderInteface {
        public List<HashMap<String, Object>> getOrderedDetails(long c_id);
 
        public HashMap<String, Object> getOrderedProduct(long p_id, long qty, String glassType);
+
+       public boolean sendInvoice(long order_id);
 }

@@ -46,13 +46,14 @@ public class UserAuthController {
     @Autowired
     com.example.SpectaclesWebShop.Service.otpService otpService;
 
-    public Cookie createCookie(String token) {
-        String tString = "Bearer" + token;
-        Cookie cookie = new Cookie("token", tString);
+    private Cookie createCookie(String val) {
+        String CookieString = "Bearer" + val;
+        Cookie cookie = new Cookie("token", CookieString);
         cookie.setMaxAge(7 * 24 * 60 * 60);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/");
+
         return cookie;
     }
 
@@ -71,6 +72,8 @@ public class UserAuthController {
                 login.setPassword(null);
                 // set Cookie
                 response.addCookie(createCookie(token));
+
+
                 return ResponseEntity.ok()
                         .body(new ServerResponse(token, login, "Register Successfully", true));
             }
@@ -88,8 +91,10 @@ public class UserAuthController {
             if (res == Code.USER_NOT_EXIST) {
                 return ResponseEntity.status(401).body(new ServerResponse("Bad Credentials", false));
             } else if (res == Code.SUCCESS) {
+
                 Login login1 = loginDao.findByMailId(login.getMailId());
                 login1.setPassword(null);
+
                 UserDetails userDetails = this.customeUserDetailService.loadUserByUsername(login.getMailId());
                 String token = this.jwtUtil.generateToken(userDetails);
                 // set Cookie
@@ -120,7 +125,7 @@ public class UserAuthController {
 
     // sent otp api
     @PostMapping("/sendMail")
-    public ResponseEntity<?> sendMail(@RequestParam String mail) {
+    public ResponseEntity<?> sendMail(@RequestParam("mail") String mail) {
         try {
             // generate opt
             int otp = otpService.GenerateOtp(mail);
@@ -153,9 +158,10 @@ public class UserAuthController {
 
     // forgot password opt api
     @PostMapping("/forgotPassword")
-    public ResponseEntity<?> forgotPassword(@RequestParam String mail) {
+    public ResponseEntity<?> forgotPassword(@RequestParam("mail") String mail) {
 
         try {
+
             Login login = loginDao.findByMailId(mail);
             if (login == null || login.getMailId() == null) {
                 return ResponseEntity.status(401).body(new ServerResponse("Bad Credentials", false));
@@ -171,6 +177,7 @@ public class UserAuthController {
     @PutMapping("/resetPassword")
     public ResponseEntity<?> resetPassword(@RequestBody Login login) {
         try {
+
             Login l = loginDao.findByMailId(login.getMailId());
             if (l == null || l.getMailId() == null) {
                 return ResponseEntity.status(401).body(new ServerResponse("Bad Credentials", false));

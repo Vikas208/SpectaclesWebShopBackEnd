@@ -11,13 +11,12 @@ import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.Dao.ShopDetailsDao;
 import com.example.SpectaclesWebShop.Helper.JwtUtil;
 import com.example.SpectaclesWebShop.ServerResponse.ServerResponse;
+import com.example.SpectaclesWebShop.Service.CustomeUserDetailService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
@@ -51,8 +50,10 @@ public class LoadDetailsController {
 
                 String token = tString.substring(6);
                 String mailId = jwtUtil.extractUsername(token);
+
                 Login login = loginDao.findByMailId(mailId);
                 login.setPassword(null);
+
                 HashMap<String, Object> hashMap = new HashMap<>();
 
                 hashMap.put("userDetails", login);

@@ -4,15 +4,29 @@ public class OrderPayment {
     private long id;
     private long order_id;
     private String payment_type;
-    private boolean paymeny_status;
+    private boolean payment_status;
     private String transactionid;
+    private double total_amount;
 
-    public OrderPayment(long id, long order_id, String payment_type, boolean paymeny_status, String transactionid) {
+    public OrderPayment(long id, long order_id, String payment_type, boolean payment_status, String transactionid,
+            double total_amount) {
         this.id = id;
         this.order_id = order_id;
         this.payment_type = payment_type;
-        this.paymeny_status = paymeny_status;
+        this.payment_status = payment_status;
         this.transactionid = transactionid;
+        this.total_amount = total_amount;
+    }
+
+    public OrderPayment() {
+    }
+
+    public double getTotal_amount() {
+        return total_amount;
+    }
+
+    public void setTotal_amount(double total_amount) {
+        this.total_amount = total_amount;
     }
 
     public long getId() {
@@ -39,12 +53,12 @@ public class OrderPayment {
         this.payment_type = payment_type;
     }
 
-    public boolean isPaymeny_status() {
-        return paymeny_status;
+    public boolean isPayment_status() {
+        return payment_status;
     }
 
-    public void setPaymeny_status(boolean paymeny_status) {
-        this.paymeny_status = paymeny_status;
+    public void setPayment_status(boolean paymeny_status) {
+        this.payment_status = paymeny_status;
     }
 
     public String getTransactionid() {

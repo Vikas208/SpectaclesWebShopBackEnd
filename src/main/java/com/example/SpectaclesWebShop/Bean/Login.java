@@ -5,6 +5,7 @@ public class Login {
     private String mailId;
     private String name;
     private String password;
+    private String hasRole;
 
     // no user Found
     public Login() {
@@ -12,14 +13,16 @@ public class Login {
         this.mailId = null;
         this.name = null;
         this.password = null;
+        this.hasRole = null;
     }
 
     // when Fetch Data
-    public Login(long id, String mailId, String name, String password) {
+    public Login(long id, String mailId, String name, String password,String hasRole) {
         this.id = id;
         this.mailId = mailId;
         this.name = name;
         this.password = password;
+        this.hasRole = hasRole;
     }
 
     // Fetch User Details
@@ -27,6 +30,15 @@ public class Login {
         this.id = id;
         this.mailId = mailId;
         this.name = name;
+        this.hasRole = null;
+    }
+
+    public String getHasRole() {
+        return hasRole;
+    }
+
+    public void setHasRole(String hasRole) {
+        this.hasRole = hasRole;
     }
 
     public String getMailId() {

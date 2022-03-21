@@ -1,11 +1,13 @@
 package com.example.SpectaclesWebShop.Controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.example.SpectaclesWebShop.Bean.CustomersProductsDetails;
 import com.example.SpectaclesWebShop.Bean.Order;
 import com.example.SpectaclesWebShop.Bean.OrderAddress;
+import com.example.SpectaclesWebShop.Bean.OrderPayment;
+import com.example.SpectaclesWebShop.Bean.OrderedProducts;
 import com.example.SpectaclesWebShop.Dao.OrderDao;
 import com.example.SpectaclesWebShop.Info.Code;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,9 +88,11 @@ public class OrderController {
        }
 
        @PostMapping("/addOrderedProducts")
-       public ResponseEntity<?> addOrderedProducts(@RequestBody CustomersProductsDetails customersProductsDetails) {
+       public ResponseEntity<?> addOrderedProducts(
+                     @RequestBody ArrayList<OrderedProducts> orderedProducts) {
               try {
-                     int result = orderDao.addOrderProducts(customersProductsDetails);
+                     // System.out.println(orderedProducts.toString());
+                     int result = orderDao.addOrderProducts(orderedProducts);
                      if (result != Code.ERROR_CODE) {
                             return ResponseEntity.ok(result);
                      }
@@ -99,9 +103,9 @@ public class OrderController {
        }
 
        @PutMapping("/updateOrderedProducts")
-       public ResponseEntity<?> updateOrderedProducts(@RequestBody CustomersProductsDetails customersProductsDetails) {
+       public ResponseEntity<?> updateOrderedProducts(@RequestBody OrderedProducts orderedProducts) {
               try {
-                     int result = orderDao.updateOrderProducts(customersProductsDetails);
+                     int result = orderDao.updateOrderProducts(orderedProducts);
                      if (result != Code.ERROR_CODE) {
                             return ResponseEntity.ok(result);
                      }
@@ -155,6 +159,39 @@ public class OrderController {
               try {
                      HashMap<String, Object> product = orderDao.getOrderedProduct(p_id, qty, glassType);
                      return ResponseEntity.ok(product);
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+       }
+
+       @PostMapping("/addProductPayment")
+       public ResponseEntity<?> addProductPayment(@RequestBody OrderPayment orderPayment) {
+              try {
+                     int result = orderDao.addOrderPaymentDetails(orderPayment);
+                     return ResponseEntity.ok(result);
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+       }
+
+       @PostMapping("/sendInvoice")
+       public ResponseEntity<?> sendInvoice(@RequestParam("order") long order_id) {
+              try {
+                     boolean result = orderDao.sendInvoice(order_id);
+                     return ResponseEntity.ok(result);
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+       }
+
+       @GetMapping("/getCustomerOrders")
+       public ResponseEntity<?> getCustomerOrders(@RequestParam("userId") long user_id) {
+              try {
+                     List<Order> orders = orderDao.getCustomerOrders(user_id);
+                     return ResponseEntity.ok(orders);
               } catch (Exception e) {
                      e.printStackTrace();
               }

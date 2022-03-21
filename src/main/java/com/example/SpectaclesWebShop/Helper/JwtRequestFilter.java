@@ -41,9 +41,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     // System.out.println(cookie.getValue());
                     requestTokenHeader = cookie.getValue();
                 }
+
             }
         }
-
         String mailId = null;
         String jwtToken = null;
 
@@ -61,6 +61,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         if (mailId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
             UserDetails userDetails = this.customeUserDetailService.loadUserByUsername(mailId);
 
             if (jwtUtil.validateToken(jwtToken, userDetails)) {
@@ -69,6 +70,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 usernamePasswordAuthenticationToken
                         .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+            }
+            else{
+                SecurityContextHolder.getContext().setAuthentication(null);
             }
         }
         filterChain.doFilter(request, response);

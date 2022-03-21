@@ -195,7 +195,7 @@ public class CustomerProductsDao implements CustomerProductsInterface {
        @Override
        public List<HashMap<String, Object>> getBillingInformation(long c_id) {
               try {
-                     String query = "select CC.C_ID,sum(CC.QTY * ((P.P_PRICE - IF(PS.E_DATE < CURRENT_DATE(),0,PS.OFF_AMOUNT) - (P.P_PRICE * IF(PS.E_DATE < CURRENT_DATE(),0,PS.PERCENTAGE) / 100) )+ IF(isnull(GP.GLASS_NAME),0,GP.PRICE)+ (P.P_PRICE * (IF(isnull(TD.GST),0,TD.GST)/100))+ (P.P_PRICE * IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100)))'PRICE' , sum(P.P_PRICE * (IF(ISNULL(TD.GST),0,TD.GST)/100))'GST',sum(P.P_PRICE * (IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100))'OTHER_TAX' from "
+                     String query = "select CC.C_ID,sum(CC.QTY * ((P.P_PRICE - IF(PS.E_DATE < CURRENT_DATE(),0,PS.OFF_AMOUNT) - (P.P_PRICE * IF(PS.E_DATE < CURRENT_DATE(),0,PS.PERCENTAGE) / 100) )+ IF(isnull(GP.GLASS_NAME),0,GP.PRICE)+ (P.P_PRICE * (IF(isnull(TD.GST),0,TD.GST)/100))+ (P.P_PRICE * IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100)))'PRICE' , sum(P.P_PRICE * (IF(ISNULL(TD.GST),0,TD.GST)/100))'GST',sum(P.P_PRICE * (IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100))'OTHER_TAX',sum(IF(isnull(GP.GLASS_NAME),0,GP.PRICE))'GLASSPRICE' from "
                                    + TableName.CUSTOMER_CART + " CC LEFT JOIN " + TableName.PRODUCTS
                                    + " P ON CC.P_ID=P.P_ID LEFT JOIN " + TableName.PRODUCT_SALES
                                    + " PS ON CC.P_ID = PS.P_ID LEFT JOIN " + TableName.GLASSPRICE
@@ -213,6 +213,7 @@ public class CustomerProductsDao implements CustomerProductsInterface {
                                    map.put("totalprice", rs.getDouble("PRICE"));
                                    map.put("gst", rs.getDouble("GST"));
                                    map.put("othertax", rs.getDouble("OTHER_TAX"));
+                                   map.put("glassPrice", rs.getDouble("GLASSPRICE"));
 
                                    return map;
                             }

@@ -45,4 +45,6 @@ public interface ProductsInterface {
 
         public Products getOrderedProduct(long p_id);
 
+        public int updateProductStockAndSales(long p_id, int qty);
+
 }
