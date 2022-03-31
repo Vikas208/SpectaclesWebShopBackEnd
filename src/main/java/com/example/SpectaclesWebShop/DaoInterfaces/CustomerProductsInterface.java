@@ -28,5 +28,6 @@ public interface CustomerProductsInterface {
 
        public List<HashMap<String, Object>> getBillingInformation(long c_id);
 
+       public int CheckAllProductData(long c_id);
 }
 // c_id glassType onlyFrame p_id p_price saleDetails

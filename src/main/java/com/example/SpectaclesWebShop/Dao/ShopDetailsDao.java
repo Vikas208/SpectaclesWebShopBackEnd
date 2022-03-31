@@ -11,12 +11,14 @@ import com.example.SpectaclesWebShop.DaoInterfaces.ShopDetailsInterface;
 import com.example.SpectaclesWebShop.RawMapperImplement.ShopDetailsRaw.CarouselRawMapperImple;
 import com.example.SpectaclesWebShop.RawMapperImplement.ShopDetailsRaw.ShopDetailsRawMapperImple;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.relational.core.sql.TableLike;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 
 @Repository
@@ -27,7 +29,7 @@ public class ShopDetailsDao implements ShopDetailsInterface {
 
     private String CreateShopDetailsTable() {
         return "CREATE TABLE IF NOT EXISTS " + TableName.SHOP_DETAILS
-                + " (ID INT PRIMARY KEY,SHOP_NAME VARCHAR(100) NOT NULL,ADDRESS VARCHAR(100) NOT NULL,CITY VARCHAR(30) NOT NULL,PINCODE VARCHAR(6) NOT NULL,PHONE_NUMBER JSON NOT NULL,MAIL_ID JSON NOT NULL,LOGO_URL VARCHAR(2000))";
+                + " (ID INT PRIMARY KEY,SHOP_NAME VARCHAR(100) NOT NULL,ADDRESS VARCHAR(100) NOT NULL,CITY VARCHAR(30) NOT NULL,STATE VARCHAR(30) NOT NULL,PINCODE VARCHAR(6) NOT NULL,PHONE_NUMBER JSON NOT NULL,MAIL_ID JSON NOT NULL,LOGO_URL VARCHAR(2000))";
     }
 
     private String CreateCarouselTable() {
@@ -163,6 +165,182 @@ public class ShopDetailsDao implements ShopDetailsInterface {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public int updateShopDetails(ShopDetails shopDetails) {
+        try {
+            String query = "UPDATE " + TableName.SHOP_DETAILS
+                    + " SET SHOP_NAME=?,ADDRESS=?,CITY=?,STATE=?,PINCODE=?,PHONE_NUMBER=?,MAIL_ID=?,LOGO_URL=?";
+
+            return jdbcTemplate.update(query, shopDetails.getShopName(), shopDetails.getAddress().getAddress(),
+                    shopDetails.getAddress().getCity(), shopDetails.getAddress().getState(),
+                    shopDetails.getAddress().getPinCode(),
+                    shopDetails.getPhoneNumber(), shopDetails.getMailId());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int addCarouselImage(List<Carousel> carousels) {
+        try {
+            int result = 0;
+            for (int i = 0; i < carousels.size(); i++) {
+
+                String query = "INSERT INTO " + TableName.CAROUSEL + " (IMAGE) VALUES(?)";
+                result += jdbcTemplate.update(query, carousels.get(i).getImages());
+            }
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int addGlassType(GlassType glassType) {
+        try {
+            String query = "INSERT INTO " + TableName.GLASSPRICE + " (GLASS_NAME,PRICE) VALUES(?,?)";
+            return jdbcTemplate.update(query, glassType.getGlass_name(), glassType.getPrice());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int deleteCarouselImage(long id) {
+        try {
+            String query = "DELETE FROM " + TableName.CAROUSEL + " WHERE ID=?";
+            return jdbcTemplate.update(query, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int deleteGlassType(long id) {
+        try {
+            String query = "DELETE FROM " + TableName.GLASSPRICE + " WHERE G_ID=?";
+            return jdbcTemplate.update(query, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int updateGlassType(GlassType glassType) {
+        try {
+            String query = "UPDATE " + TableName.GLASSPRICE + " SET GLASS_NAME=?,PRICE=? WHERE G_ID=?";
+            return jdbcTemplate.update(query, glassType.getGlass_name(), glassType.getPrice(), glassType.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int addCategory(HashMap<String, Object> category) {
+        try {
+            String query = "INSERT INTO " + TableName.CATEGORY + " (CATEGORYNAME) VALUES(?)";
+            return jdbcTemplate.update(query, category.get("data"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int addCompanyName(HashMap<String, Object> companyName) {
+        try {
+            String query = "INSERT INTO " + TableName.COMPANY_NAME + " (COMPANY_NAME) VALUES(?)";
+            return jdbcTemplate.update(query, companyName.get("data"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int addFrameStyle(HashMap<String, Object> frameStyle) {
+        try {
+            String query = "INSERT INTO " + TableName.FRAME_STYLE + " (FRAMENAME) VALUES(?)";
+            return jdbcTemplate.update(query, frameStyle.get("data"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int deleteCategory(long id) {
+        try {
+            String query = "DELETE FROM " + TableName.CATEGORY + " WHERE CAT_ID=?";
+            return jdbcTemplate.update(query, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int deleteCompanyName(long id) {
+        try {
+            String query = "DELETE FROM " + TableName.COMPANY_NAME + " WHERE COMPANY_ID=?";
+            return jdbcTemplate.update(query, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int deleteFrameStyle(long id) {
+        try {
+            String query = "DELETE FROM " + TableName.FRAME_STYLE + " WHERE FRAME_ID=?";
+            return jdbcTemplate.update(query, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int updateCategory(HashMap<String, Object> category) {
+        try {
+            String query = "UPDATE " + TableName.CATEGORY + " SET CATEGORYNAME=? WHERE CAT_ID=?";
+            return jdbcTemplate.update(query, category.get("data"), category.get("id"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int updateCompanyName(HashMap<String, Object> companyName) {
+        try {
+            String query = "UPDATE " + TableName.COMPANY_NAME + " SET COMPANY_NAME=? WHERE COMPANY_ID=?";
+            return jdbcTemplate.update(query, companyName.get("data"), companyName.get("id"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int updateFrameStyle(HashMap<String, Object> frameStyle) {
+        try {
+            String query = "UPDATE " + TableName.COMPANY_NAME + " SET FRAMENAME=? WHERE FRAME_ID=?";
+            return jdbcTemplate.update(query, frameStyle.get("data"), frameStyle.get("id"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
     }
 
 }

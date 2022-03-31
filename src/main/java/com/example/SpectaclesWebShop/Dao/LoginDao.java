@@ -12,7 +12,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @Repository
@@ -98,6 +97,23 @@ public class LoginDao implements LoginInterface {
             String query = "SELECT * FROM " + TableName.LOGIN_TABLE + " WHERE MAILID=?";
             RowMapper<Login> loginRowMapper = new LoginRawMapperImple();
             return jdbcTemplate.queryForObject(query, loginRowMapper, value);
+        } catch (EmptyResultDataAccessException e) {
+            if (e.getActualSize() == 0) {
+                return new Login();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public Login findUserByIdAdmin(String mailid) {
+        try {
+
+            String query = "SELECT * FROM " + TableName.LOGIN_TABLE + " WHERE MAILID=? AND HASROLE='admin'";
+            RowMapper<Login> loginRowMapper = new LoginRawMapperImple();
+            return jdbcTemplate.queryForObject(query, loginRowMapper, mailid);
         } catch (EmptyResultDataAccessException e) {
             if (e.getActualSize() == 0) {
                 return new Login();

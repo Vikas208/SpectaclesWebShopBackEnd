@@ -1,5 +1,6 @@
 package com.example.SpectaclesWebShop;
 
+import com.example.SpectaclesWebShop.Bean.Login;
 import com.example.SpectaclesWebShop.Dao.CustomerProductsDao;
 import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.Dao.OrderDao;
@@ -9,10 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 @SpringBootApplication
 public class SpectaclesWebShopApplication implements CommandLineRunner {
@@ -35,10 +32,12 @@ public class SpectaclesWebShopApplication implements CommandLineRunner {
 		SpringApplication.run(SpectaclesWebShopApplication.class, args);
 	}
 
-
 	@Override
 	public void run(String... args) {
 		loginDao.createDataBase();
+		// Login l = new Login(0, "shreechasamaghar263@gmail.com", "Shree Chasama Ghar",
+		// "12345678", "admin");
+		// loginDao.SaveData(l);
 		shopDetailsDao.createDatabase();
 		productsDao.createDataBase();
 		customerProductsDao.CreateDataBase();

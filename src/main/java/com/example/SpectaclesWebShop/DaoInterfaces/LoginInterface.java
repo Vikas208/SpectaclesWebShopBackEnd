@@ -20,4 +20,6 @@ public interface LoginInterface {
     int ChangeName(Login l);
 
     Login findById(long id);
+
+    Login findUserByIdAdmin(String id);
 }

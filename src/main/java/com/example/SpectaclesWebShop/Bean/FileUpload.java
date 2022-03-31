@@ -3,8 +3,11 @@ package com.example.SpectaclesWebShop.Bean;
 import org.springframework.web.multipart.MultipartFile;
 
 public class FileUpload {
-    MultipartFile file;
+    private MultipartFile file;
 
+    FileUpload(){
+
+    }
     public FileUpload(MultipartFile file) {
         this.file = file;
     }

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 @Repository
@@ -33,7 +33,7 @@ public class ProductsDao implements ProductsInterface {
     // Products DataBase
     public String createProductDatabase() {
         return "create table if not exists " + TableName.PRODUCTS
-                + " (P_ID int auto_increment primary key,P_NAME varchar(100) NOT NULL,P_DESCRIPTION varchar(2000),P_PRICE double NOT NULL,P_CATEGORY varchar(50) NOT NULL,P_GROUP VARCHAR(6) NOT NULL,P_FRAMESTYLE VARCHAR(50) NOT NULL,FRAMESIZE VARCHAR(45) NOT NULL,COLOR VARCHAR(45) NOT NULL,COMPANY_NAME VARCHAR(50) NOT NULL,BANNER_IMAGE VARCHAR(2000) NOT NULL,P_STOCK INT NOT NULL DEFAULT (0),TOTALSALES INT DEFAULT (0),CONSTRAINT FOREIGN KEY (P_CATEGORY) REFERENCES "
+                + " (P_ID int auto_increment primary key,P_NAME varchar(100) NOT NULL,P_DESCRIPTION varchar(2000),P_PRICE double NOT NULL,P_CATEGORY varchar(50) NOT NULL,P_GROUP VARCHAR(6) NOT NULL,P_FRAMESTYLE VARCHAR(50) NOT NULL,FRAMESIZE VARCHAR(45) NOT NULL,COLOR VARCHAR(45) NOT NULL,COMPANY_NAME VARCHAR(50) NOT NULL,WARRANTY VARCHAR(20) DEFAULT('0 YEAR'),GUARANTY VARCHAR(20) DEFAULT('0 YEAR'),BANNER_IMAGE VARCHAR(2000) NOT NULL,P_STOCK INT NOT NULL DEFAULT (0),TOTALSALES INT DEFAULT (0),CONSTRAINT FOREIGN KEY (P_CATEGORY) REFERENCES "
                 + TableName.CATEGORY + " (CATEGORYNAME) ,FOREIGN KEY (P_FRAMESTYLE) REFERENCES " + TableName.FRAME_STYLE
                 + " (FRAMENAME), FOREIGN KEY (COMPANY_NAME) REFERENCES " + TableName.COMPANY_NAME + " (COMPANY_NAME));";
     }
@@ -131,7 +131,7 @@ public class ProductsDao implements ProductsInterface {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return 0;
+        return Code.ERROR_CODE;
     }
 
     @Override
@@ -203,7 +203,7 @@ public class ProductsDao implements ProductsInterface {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return 0;
+        return Code.ERROR_CODE;
     }
 
     // common Function for category ,framestyle,company name
@@ -296,13 +296,13 @@ public class ProductsDao implements ProductsInterface {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return 0;
+        return Code.ERROR_CODE;
     }
 
     @Override
     public Products getOrderedProduct(long p_id) {
         try {
-            String query = "select P.P_ID,P_NAME,(P_PRICE - IF(PS.E_DATE>current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100))))'PRICE',BANNER_IMAGE,P_STOCK,P_CATEGORY from "
+            String query = "select P.P_ID,P_NAME,(P_PRICE - IF(PS.E_DATE<current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100))))'PRICE',BANNER_IMAGE,P_STOCK,P_CATEGORY from "
                     + TableName.PRODUCTS + " P LEFT JOIN (SELECT * FROM "
                     + TableName.PRODUCT_SALES + ") PS  ON P.P_ID = PS.P_ID WHERE P.P_ID=?";
 
@@ -361,7 +361,167 @@ public class ProductsDao implements ProductsInterface {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return 0;
+        return Code.ERROR_CODE;
+    }
+
+    // Admin Side
+
+    @Override
+    public List<Products> getProductsData(int limit, int offset) {
+        try {
+            String query = "SELECT P_ID,P_NAME,P_PRICE,P_STOCK,TOTALSALES,BANNER_IMAGE,P_DESCRIPTION FROM "
+                    + TableName.PRODUCTS + " limit ? OFFSET ?";
+
+            RowMapper<Products> productsRowMapper = new RowMapper<Products>() {
+                @Override
+                public Products mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    Products products = new Products();
+                    ProductDescription productDescription = new ProductDescription();
+                    products.setId(rs.getLong("P_ID"));
+                    products.setP_name(rs.getString("P_NAME"));
+                    products.setP_price(rs.getDouble("P_PRICE"));
+                    products.setP_stock(rs.getInt("P_STOCK"));
+                    products.setTotalSales(rs.getInt("TOTALSALES"));
+                    products.setBannerImage(rs.getString("BANNER_IMAGE"));
+
+                    productDescription.setP_description(rs.getString("P_DESCRIPTION"));
+
+                    products.setProductDescription(productDescription);
+
+                    return products;
+                }
+            };
+
+            return jdbcTemplate.query(query, productsRowMapper, limit, offset);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public int updateProductDetails(Products products) {
+        try {
+            String query = "UPDATE " + TableName.PRODUCTS
+                    + " SET P_NAME=?,P_DESCRIPTION=?,P_PRICE=?,P_CATEGORY=?,P_GROUP=?,P_FRAMESTYLE=?,FRAMESIZE=?,COLOR=?,COMPANY_NAME=?,BANNER_IMAGE=?,P_STOCK=?,WARRANTY=?,GUARANTY=? WHERE P_ID=?";
+            return jdbcTemplate.update(query, products.getP_name(), products.getProductDescription().getP_description(),
+                    products.getP_price(), products.getProductDescription().getP_category(),
+                    products.getProductDescription().getP_group(), products.getProductDescription().getP_frameStyle(),
+                    products.getProductDescription().getP_frameSize(), products.getProductDescription().getColor(),
+                    products.getProductDescription().getCompany_name(), products.getBannerImage(),
+                    products.getP_stock(), products.getProductDescription().getWarranty(),
+                    products.getProductDescription().getGuaranty(), products.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int deleteProduct(int p_id) {
+        try {
+            String query = "delete from " + TableName.PRODUCTS + " where p_id=?";
+            return jdbcTemplate.update(query, p_id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public Products getEditProductDetails(long id) {
+        try {
+            String query = "select * from " + TableName.PRODUCTS + " P LEFT JOIN (SELECT * FROM "
+                    + TableName.PRODUCT_SALES + ") PS  ON P.P_ID = PS.P_ID WHERE P.P_ID=?";
+            RowMapper<Products> productsRowMapper = new RowMapper<Products>() {
+                @Override
+                public Products mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    Products products = new Products();
+                    ProductDescription productDescription = new ProductDescription();
+                    ProductSales productSales = new ProductSales();
+
+                    products.setId(rs.getLong("P_ID"));
+                    products.setP_name(rs.getString("P_NAME"));
+                    products.setP_price(rs.getDouble("P_PRICE"));
+                    products.setBannerImage(rs.getString("BANNER_IMAGE"));
+                    products.setP_stock(rs.getInt("P_STOCK"));
+
+                    productDescription.setCompany_name(rs.getString("COMPANY_NAME"));
+                    productDescription.setP_description(rs.getString("P_DESCRIPTION"));
+                    productDescription.setP_category(rs.getString("P_CATEGORY"));
+                    productDescription.setP_group(rs.getString("P_GROUP"));
+                    productDescription.setP_frameStyle(rs.getString("P_FRAMESTYLE"));
+                    productDescription.setP_frameSize(rs.getString("FRAMESIZE"));
+                    productDescription.setColor(rs.getString("COLOR"));
+                    productDescription.setWarranty(rs.getString("WARRANTY"));
+                    productDescription.setGuaranty(rs.getString("GUARANTY"));
+
+                    productSales.setP_id(rs.getLong("P_ID"));
+                    productSales.setPs_id(rs.getLong("PS_ID"));
+                    productSales.setSaleOff(rs.getDouble("OFF_AMOUNT"));
+                    productSales.setSalePercentage(rs.getDouble("PERCENTAGE"));
+                    productSales.setSale_start(rs.getDate("S_DATE"));
+                    productSales.setSale_end(rs.getDate("E_DATE"));
+
+                    products.setProductDescription(productDescription);
+                    products.setProductSales(productSales);
+                    return products;
+                }
+            };
+            return jdbcTemplate.queryForObject(query, productsRowMapper, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public int saveProduct(Products product) {
+        try {
+            String query = "insert into " + TableName.PRODUCTS
+                    + " (P_NAME,P_DESCRIPTION,P_PRICE,P_CATEGORY,P_GROUP,P_FRAMESTYLE,FRAMESIZE,COLOR,WARRANTY,GUARANTY,COMPANY_NAME,BANNER_IMAGE,P_STOCK) values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+            return jdbcTemplate.update(query, product.getP_name(), product.getProductDescription().getP_description(),
+                    product.getP_price(), product.getProductDescription().getP_category(),
+                    product.getProductDescription().getP_group(), product.getProductDescription().getP_frameStyle(),
+                    product.getProductDescription().getP_frameSize(), product.getProductDescription().getColor(),
+                    product.getProductDescription().getWarranty(),
+                    product.getProductDescription().getGuaranty(),
+                    product.getProductDescription().getCompany_name(), product.getBannerImage(), product.getP_stock());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int updateProductSale(ProductSales sale) {
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            String s_date = format.format(sale.getSale_start());
+            String e_date = format.format(sale.getSale_end());
+            String query = "UPDATE " + TableName.PRODUCT_SALES
+                    + " SET OFF_AMOUNT=?,PERCENTAGE=?,S_DATE=?,E_DATE=? WHERE PS_ID=?";
+            return jdbcTemplate.update(query, sale.getSaleOff(), sale.getSalePercentage(), s_date, e_date,
+                    sale.getPs_id());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int deleteProductCarouselImage(long id) {
+        try {
+            String query = "DELETE FROM " + TableName.PRODUCT_IMAGE + " WHERE PI_ID=?";
+            return jdbcTemplate.update(query, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
     }
 
 }

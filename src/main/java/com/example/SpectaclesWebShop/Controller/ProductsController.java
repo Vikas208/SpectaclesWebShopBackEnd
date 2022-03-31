@@ -3,18 +3,15 @@ package com.example.SpectaclesWebShop.Controller;
 import com.example.SpectaclesWebShop.Bean.Data;
 import com.example.SpectaclesWebShop.Bean.FeedBack;
 import com.example.SpectaclesWebShop.Bean.ProductImage;
+import com.example.SpectaclesWebShop.Bean.ProductSales;
 import com.example.SpectaclesWebShop.Bean.Products;
 import com.example.SpectaclesWebShop.Dao.ProductsDao;
+import com.example.SpectaclesWebShop.Info.Code;
 import com.example.SpectaclesWebShop.ServerResponse.ServerResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -116,12 +113,17 @@ public class ProductsController {
     }
 
     @GetMapping("/fetch/getProduct")
-    public ResponseEntity<?> GetProduct(@RequestParam("productId") long p_id) {
+    public ResponseEntity<?> GetProduct(@RequestParam("productId") long p_id,
+            @RequestParam(value = "admin", required = false) boolean isAdmin) {
         try {
-            Products products = productsDao.getProduct(p_id);
-            if (products != null) {
-
-                return ResponseEntity.ok(products);
+            Products product;
+            if (isAdmin) {
+                product = productsDao.getEditProductDetails(p_id);
+            } else {
+                product = productsDao.getProduct(p_id);
+            }
+            if (product != null) {
+                return ResponseEntity.ok(product);
             }
         } catch (Exception e) {
 
@@ -215,7 +217,7 @@ public class ProductsController {
     }
 
     @GetMapping("/getOrderedProductDetails")
-    public ResponseEntity<?> getOrderedProductDetails(@RequestParam("userId") long p_id) {
+    public ResponseEntity<?> getOrderedProductDetails(@RequestParam("p_id") long p_id) {
         try {
             Products products = productsDao.getOrderedProduct(p_id);
             if (products != null) {
@@ -229,4 +231,77 @@ public class ProductsController {
         return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
 
     }
+
+    @GetMapping("/getProducts")
+    public ResponseEntity<?> getProducts(@RequestParam("limit") int limit, @RequestParam("offset") int offset) {
+        try {
+            List<Products> productsList = productsDao.getProductsData(limit, offset);
+            return ResponseEntity.ok(productsList);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @DeleteMapping("/deleteProduct")
+    public ResponseEntity<?> deleteProduct(@RequestParam("p_id") int p_id) {
+        try {
+            int row = productsDao.deleteProduct(p_id);
+            if (row != Code.ERROR_CODE)
+                return ResponseEntity.ok(row);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @PutMapping("/updateProduct")
+    public ResponseEntity<?> getProducts(@RequestBody Products products) {
+        try {
+
+            int row = productsDao.updateProductDetails(products);
+            if (row != Code.ERROR_CODE)
+                return ResponseEntity.ok(row);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @PutMapping("/updateProductSale")
+    public ResponseEntity<?> updateProductSale(@RequestBody ProductSales sales) {
+        try {
+            int row = productsDao.updateProductSale(sales);
+            if (row != Code.ERROR_CODE)
+                return ResponseEntity.ok(row);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @PostMapping("/saveProduct")
+    public ResponseEntity<?> saveProduct(@RequestBody Products products) {
+        try {
+            int row = productsDao.saveProduct(products);
+            if (row != Code.ERROR_CODE)
+                return ResponseEntity.ok(row);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @DeleteMapping("/deleteProductImage")
+    public ResponseEntity<?> deleteProductImage(@RequestParam("id") long id) {
+        try {
+            int row = productsDao.deleteProductCarouselImage(id);
+            if (row != Code.ERROR_CODE)
+                return ResponseEntity.ok(row);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
 }

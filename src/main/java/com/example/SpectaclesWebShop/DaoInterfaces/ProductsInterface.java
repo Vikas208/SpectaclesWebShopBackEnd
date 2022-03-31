@@ -4,6 +4,7 @@ import com.example.SpectaclesWebShop.Bean.Data;
 import com.example.SpectaclesWebShop.Bean.FeedBack;
 
 import com.example.SpectaclesWebShop.Bean.ProductImage;
+import com.example.SpectaclesWebShop.Bean.ProductSales;
 import com.example.SpectaclesWebShop.Bean.Products;
 
 import java.util.List;
@@ -47,4 +48,18 @@ public interface ProductsInterface {
 
         public int updateProductStockAndSales(long p_id, int qty);
 
+        public List<Products> getProductsData(int limit, int offset);
+
+        public int saveProduct(Products product);
+
+        public int updateProductDetails(Products products);
+
+        public int deleteProduct(int p_id);
+
+        public int updateProductSale(ProductSales sales);
+
+        public int deleteProductCarouselImage(long id);
+
+        // admin
+        public Products getEditProductDetails(long id);
 }

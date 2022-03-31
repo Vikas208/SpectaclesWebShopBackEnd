@@ -17,11 +17,12 @@ public class ShopDetailsRawMapperImple implements RowMapper<ShopDetails> {
 
         address.setAddress(rs.getString(3));
         address.setCity(rs.getString(4));
-        address.setPinCode(rs.getString(5));
+        address.setState(rs.getString(5));
+        address.setPinCode(rs.getString(6));
 
-        shopDetails.setPhoneNumber(rs.getString(6));
-        shopDetails.setMailId(rs.getString(7));
-        shopDetails.setLogoUrl(rs.getString(8));
+        shopDetails.setPhoneNumber(rs.getString(7));
+        shopDetails.setMailId(rs.getString(8));
+        shopDetails.setLogoUrl(rs.getString(9));
 
         shopDetails.setAddress(address);
         return shopDetails;

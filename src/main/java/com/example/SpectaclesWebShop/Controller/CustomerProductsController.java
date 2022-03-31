@@ -39,7 +39,7 @@ public class CustomerProductsController {
                      e.printStackTrace();
               }
               return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error",
-                            true));
+                            false));
        }
 
        @PostMapping("/saveToWishList")
@@ -54,22 +54,28 @@ public class CustomerProductsController {
               } catch (Exception e) {
                      e.printStackTrace();
               }
-              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
        }
 
        @PutMapping("/updateCartProduct")
        public ResponseEntity<?> updateCartProduct(@RequestBody CustomersProductsDetails customersProductsDetails) {
               try {
                      int result = customerProductsDao.UpdateCartDetails(customersProductsDetails);
+                     HashMap<String, Object> map = new HashMap<String, Object>();
+                     if (result == Code.INVALIDDATA) {
+                            map.put("message", "Available Qty Not Available");
+                            map.put("success", false);
+                            return ResponseEntity.ok(map);
+                     }
                      if (result != Code.ERROR_CODE) {
-                            HashMap<String, String> map = new HashMap<String, String>();
                             map.put("message", "Done");
+                            map.put("success", true);
                             return ResponseEntity.ok(map);
                      }
               } catch (Exception e) {
                      e.printStackTrace();
               }
-              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
        }
 
        @DeleteMapping("/deleteCartProduct")
@@ -84,7 +90,7 @@ public class CustomerProductsController {
               } catch (Exception e) {
                      e.printStackTrace();
               }
-              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
        }
 
        @DeleteMapping("/deleteWishProduct")
@@ -99,7 +105,7 @@ public class CustomerProductsController {
               } catch (Exception e) {
                      e.printStackTrace();
               }
-              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
        }
 
        @GetMapping("/getCustomerCart")
@@ -112,7 +118,7 @@ public class CustomerProductsController {
               } catch (Exception e) {
                      e.printStackTrace();
               }
-              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
        }
 
        @GetMapping("/getCustomerWishList")
@@ -124,7 +130,7 @@ public class CustomerProductsController {
               } catch (Exception e) {
                      e.printStackTrace();
               }
-              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
        }
 
        @GetMapping("/countTotalProduct")
@@ -137,7 +143,7 @@ public class CustomerProductsController {
               } catch (Exception e) {
                      e.printStackTrace();
               }
-              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
        }
 
        @GetMapping("/countTotalWishListProduct")
@@ -150,7 +156,7 @@ public class CustomerProductsController {
               } catch (Exception e) {
                      e.printStackTrace();
               }
-              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
        }
 
        @GetMapping("/getBillingPricing")
@@ -163,7 +169,29 @@ public class CustomerProductsController {
               } catch (Exception e) {
                      e.printStackTrace();
               }
-              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", true));
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+       }
+
+       @GetMapping("/validateProductData")
+       public ResponseEntity<?> validateProductData(@RequestParam("userId") long userId) {
+              try {
+                     int isValid = customerProductsDao.CheckAllProductData(userId);
+                     HashMap<String, Object> map = new HashMap<String, Object>();
+
+                     if (isValid == Code.INVALIDDATA) {
+                            map.put("message",
+                                          "Incomplete Information Provided Or May Qty Of Some Product exclude Stock Please Check All Product Information");
+                            map.put("success", false);
+                            return ResponseEntity.ok(map);
+                     } else if (isValid != Code.ERROR_CODE) {
+                            map.put("success", true);
+                            return ResponseEntity.ok(map);
+                     }
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+
        }
 
 }

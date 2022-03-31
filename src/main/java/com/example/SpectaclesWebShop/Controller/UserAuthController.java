@@ -73,7 +73,6 @@ public class UserAuthController {
                 // set Cookie
                 response.addCookie(createCookie(token));
 
-
                 return ResponseEntity.ok()
                         .body(new ServerResponse(token, login, "Register Successfully", true));
             }
@@ -85,16 +84,22 @@ public class UserAuthController {
 
     // Login
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody Login login, HttpServletResponse response) {
+    public ResponseEntity<?> loginUser(@RequestBody Login login,
+            @RequestParam(value = "admin", required = false) boolean isAdmin, HttpServletResponse response) {
         try {
+
             int res = authenticate(login.getMailId(), login.getPassword());
             if (res == Code.USER_NOT_EXIST) {
                 return ResponseEntity.status(401).body(new ServerResponse("Bad Credentials", false));
             } else if (res == Code.SUCCESS) {
+                Login login1;
+                if (isAdmin) {
+                    login1 = loginDao.findUserByIdAdmin(login.getMailId());
 
-                Login login1 = loginDao.findByMailId(login.getMailId());
+                } else {
+                    login1 = loginDao.findByMailId(login.getMailId());
+                }
                 login1.setPassword(null);
-
                 UserDetails userDetails = this.customeUserDetailService.loadUserByUsername(login.getMailId());
                 String token = this.jwtUtil.generateToken(userDetails);
                 // set Cookie

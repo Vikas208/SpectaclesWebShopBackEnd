@@ -26,11 +26,12 @@ public class ImageUploadController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> upload(@ModelAttribute FileUpload file) {
+    public ResponseEntity<?> upload(@ModelAttribute FileUpload file, @RequestParam("p_id") long p_id) {
         try {
+
             File uploadedFile = convertMultiPartToFile(file.getFile());
             Map<?, ?> params = ObjectUtils.asMap(
-                    "public_id", "UserAvatar/myphoto",
+                    "public_id", "Products_Images/product_" + p_id,
                     "overwrite", true,
                     "secure", true);
             Map<?, ?> uploadResult = getCloudinaryClient().uploader().upload(uploadedFile, params);

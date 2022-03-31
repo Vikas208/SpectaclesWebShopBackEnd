@@ -30,6 +30,8 @@ public class ProductRawMapperImple implements RowMapper<Products> {
         productDescription.setP_frameStyle(rs.getString("P_FRAMESTYLE"));
         productDescription.setP_frameSize(rs.getString("FRAMESIZE"));
         productDescription.setColor(rs.getString("COLOR"));
+        productDescription.setWarranty(rs.getString("WARRANTY"));
+        productDescription.setGuaranty(rs.getString("GUARANTY"));
 
         productSales.setP_id(rs.getLong("P_ID"));
         productSales.setPs_id(rs.getLong("PS_ID"));

@@ -8,9 +8,11 @@ public class ProductDescription {
        private String p_frameSize;
        private String company_name;
        private String color;
+       private String warranty;
+       private String guaranty;
 
        public ProductDescription(String p_description, String p_category, String p_group, String p_frameStyle,
-                     String company_name, String p_frameSize, String color) {
+                     String company_name, String p_frameSize, String color, String warranty, String guaranty) {
               this.p_description = p_description;
               this.p_category = p_category;
               this.p_group = p_group;
@@ -18,6 +20,25 @@ public class ProductDescription {
               this.company_name = company_name;
               this.p_frameSize = p_frameSize;
               this.color = color;
+              this.warranty = warranty;
+              this.guaranty = guaranty;
+
+       }
+
+       public String getGuaranty() {
+              return guaranty;
+       }
+
+       public void setGuaranty(String guaranty) {
+              this.guaranty = guaranty;
+       }
+
+       public String getWarranty() {
+              return warranty;
+       }
+
+       public void setWarranty(String warranty) {
+              this.warranty = warranty;
        }
 
        public String getColor() {
@@ -77,6 +98,13 @@ public class ProductDescription {
 
        public void setCompany_name(String company_name) {
               this.company_name = company_name;
+       }
+
+       @Override
+       public String toString() {
+              return "ProductDescription [color=" + color + ", company_name=" + company_name + ", p_category="
+                            + p_category + ", p_description=" + p_description + ", p_frameSize=" + p_frameSize
+                            + ", p_frameStyle=" + p_frameStyle + ", p_group=" + p_group + "]";
        }
 
 }

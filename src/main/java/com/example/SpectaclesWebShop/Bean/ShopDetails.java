@@ -1,7 +1,5 @@
 package com.example.SpectaclesWebShop.Bean;
 
-
-
 public class ShopDetails {
     private String shopName;
     private Address address;

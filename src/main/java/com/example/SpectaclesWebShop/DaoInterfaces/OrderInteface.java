@@ -43,4 +43,7 @@ public interface OrderInteface {
        public HashMap<String, Object> getOrderedProduct(long p_id, long qty, String glassType);
 
        public boolean sendInvoice(long order_id);
+
+       // Check Shop Now Product
+       public int CheckOrderedProductData(long p_id, int qty, String glassType, boolean onlyframe);
 }

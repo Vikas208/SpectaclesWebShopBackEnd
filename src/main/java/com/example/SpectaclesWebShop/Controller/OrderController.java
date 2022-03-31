@@ -10,6 +10,8 @@ import com.example.SpectaclesWebShop.Bean.OrderPayment;
 import com.example.SpectaclesWebShop.Bean.OrderedProducts;
 import com.example.SpectaclesWebShop.Dao.OrderDao;
 import com.example.SpectaclesWebShop.Info.Code;
+import com.example.SpectaclesWebShop.ServerResponse.ServerResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -196,6 +198,29 @@ public class OrderController {
                      e.printStackTrace();
               }
               return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+       }
+
+       @GetMapping("/validateProductData")
+       public ResponseEntity<?> validateProductData(@RequestParam("p_id") long p_id, @RequestParam("qty") int qty,
+                     @RequestParam("onlyframe") boolean onlyframe, @RequestParam("glassType") String glassType) {
+              try {
+                     int isValid = orderDao.CheckOrderedProductData(p_id, qty, glassType, onlyframe);
+                     HashMap<String, Object> map = new HashMap<String, Object>();
+
+                     if (isValid == Code.INVALIDDATA) {
+                            map.put("message",
+                                          "Incomplete Information Provided Or May Qty Product exclude Stock Please Check Product Information");
+                            map.put("success", false);
+                            return ResponseEntity.ok(map);
+                     } else if (isValid != Code.ERROR_CODE) {
+                            map.put("success", true);
+                            return ResponseEntity.ok(map);
+                     }
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+
        }
 
 }

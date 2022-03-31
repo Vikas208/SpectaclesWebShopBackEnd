@@ -1,5 +1,6 @@
 package com.example.SpectaclesWebShop.Dao;
 
+import com.example.SpectaclesWebShop.Bean.GlassType;
 import com.example.SpectaclesWebShop.Bean.Login;
 import com.example.SpectaclesWebShop.Bean.Order;
 import com.example.SpectaclesWebShop.Bean.OrderAddress;
@@ -42,6 +43,9 @@ public class OrderDao implements OrderInteface {
 
        @Autowired
        EmailService emailService;
+
+       @Autowired
+       ShopDetailsDao shopDetailsDao;
 
        public String CreateOrderTable() {
               return "CREATE TABLE IF NOT EXISTS " + TableName.ORDER
@@ -319,7 +323,7 @@ public class OrderDao implements OrderInteface {
        @Override
        public List<HashMap<String, Object>> getOrderedDetails(long c_id) {
               try {
-                     String query = "select CC.C_ID,P.P_ID,P.P_NAME,P.P_PRICE,CC.QTY,CC.ONLYFRAME,CC.LEFT_EYE_NO,CC.RIGHT_EYE_NO,CC.GLASSTYPE,(CC.QTY * ((P.P_PRICE - IF(PS.E_DATE <CURRENT_DATE(),0,PS.OFF_AMOUNT) - (P.P_PRICE * IF(PS.E_DATE < CURRENT_DATE(),0,PS.PERCENTAGE/100)) )+ IF(isnull(GP.GLASS_NAME),0,GP.PRICE)+ (P.P_PRICE * (IF(isnull(TD.GST),0,TD.GST)/100))+ (P.P_PRICE * IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100)))'PRICE' , (P.P_PRICE * (IF(ISNULL(TD.GST),0,TD.GST)/100))'GST',(P.P_PRICE * (IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100))'OTHER_TAX',IF(PS.E_DATE<current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100)))'SALE',IF(isnull(GP.GLASS_NAME),0,GP.PRICE)'GLASSPRICE' from "
+                     String query = "select CC.C_ID,P.P_ID,P.P_NAME,P.P_PRICE,CC.QTY,CC.ONLYFRAME,CC.LEFT_EYE_NO,CC.RIGHT_EYE_NO,CC.GLASSTYPE,(CC.QTY * ((P.P_PRICE - IF(PS.E_DATE <CURRENT_DATE(),0,PS.OFF_AMOUNT) - (P.P_PRICE * IF(PS.E_DATE < CURRENT_DATE(),0,PS.PERCENTAGE/100)) )+ IF(isnull(GP.GLASS_NAME),0,GP.PRICE)+ (P.P_PRICE * (IF(isnull(TD.GST),0,TD.GST)/100))+ (P.P_PRICE * IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100)))'PRICE' , (  CC.QTY * P.P_PRICE * (IF(ISNULL(TD.GST),0,TD.GST)/100))'GST',(CC.QTY*P.P_PRICE * (IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100))'OTHER_TAX',IF(PS.E_DATE<current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100)))'SALE',IF(isnull(GP.GLASS_NAME),0,GP.PRICE)'GLASSPRICE' from "
                                    + TableName.CUSTOMER_CART + " CC LEFT JOIN " + TableName.PRODUCTS
                                    + " P ON CC.P_ID=P.P_ID LEFT JOIN " + TableName.PRODUCT_SALES
                                    + " PS ON CC.P_ID = PS.P_ID LEFT JOIN " + TableName.GLASSPRICE
@@ -360,7 +364,7 @@ public class OrderDao implements OrderInteface {
        @Override
        public HashMap<String, Object> getOrderedProduct(long p_id, long qty, String glassType) {
               try {
-                     String query = "select P.P_ID,P_NAME,BANNER_IMAGE,P_CATEGORY,P_STOCK,P_PRICE,(?*(P_PRICE - IF(PS.E_DATE<current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100))) + if(isnull(GLASS_NAME),0,GP.PRICE) + IF(isnull(TD.CATEGORY_NAME),0,((P_PRICE*(TD.GST/100))+(P_PRICE*(TD.OTHER_TAX/100))))))'PRICE', (P.P_PRICE * (IF(ISNULL(TD.GST),0,TD.GST)/100))'GST',(P.P_PRICE * (IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100))'OTHER_TAX',IF(PS.E_DATE>current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100)))'SALE',if(isnull(GLASS_NAME),0,GP.PRICE) 'GLASSPRICE' FROM "
+                     String query = "select P.P_ID,P_NAME,BANNER_IMAGE,P_CATEGORY,P_STOCK,P_PRICE,(?*(P_PRICE - IF(PS.E_DATE<current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100))) + if(isnull(GLASS_NAME),0,GP.PRICE) + IF(isnull(TD.CATEGORY_NAME),0,((P_PRICE*(TD.GST/100))+(P_PRICE*(TD.OTHER_TAX/100))))))'PRICE', (?*P.P_PRICE * (IF(ISNULL(TD.GST),0,TD.GST)/100))'GST',(?*P.P_PRICE * (IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100))'OTHER_TAX',IF(PS.E_DATE<current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100)))'SALE',if(isnull(GLASS_NAME),0,GP.PRICE) 'GLASSPRICE' FROM "
                                    + TableName.PRODUCTS + " P LEFT JOIN " + TableName.PRODUCT_SALES
                                    + " PS ON P.P_ID=PS.P_ID LEFT JOIN " + TableName.GLASSPRICE
                                    + " GP ON GP.GLASS_NAME=? LEFT JOIN " + TableName.TAX_DATABASE
@@ -386,7 +390,7 @@ public class OrderDao implements OrderInteface {
 
                      };
 
-                     return jdbcTemplate.queryForObject(query, mapper, qty,
+                     return jdbcTemplate.queryForObject(query, mapper, qty, qty, qty,
                                    glassType, p_id);
               } catch (Exception e) {
                      e.printStackTrace();
@@ -540,6 +544,51 @@ public class OrderDao implements OrderInteface {
                      e.printStackTrace();
               }
               return false;
+       }
+
+       @Override
+       public int CheckOrderedProductData(long p_id, int qty, String glassType, boolean onlyframe) {
+              try {
+                     String query = "SELECT P_STOCK,P_CATEGORY FROM " + TableName.PRODUCTS + " WHERE P_ID=?";
+                     RowMapper<HashMap<String, Object>> productMapper = new RowMapper<HashMap<String, Object>>() {
+
+                            @Override
+                            public HashMap<String, Object> mapRow(ResultSet rs, int rowNum) throws SQLException {
+                                   HashMap<String, Object> obj = new HashMap<String, Object>();
+                                   obj.put("category", rs.getString("P_CATEGORY"));
+                                   obj.put("stock", rs.getInt("P_STOCK"));
+                                   return obj;
+                            }
+                     };
+                     HashMap<String, Object> product = jdbcTemplate.queryForObject(query, productMapper, p_id);
+                     List<GlassType> glassTypes = shopDetailsDao.getGlassPricing();
+
+                     int stock = (int) product.get("stock");
+
+                     String category = (String) product.get("category");
+
+                     if (qty > stock) {
+                            return Code.INVALIDDATA;
+                     } else if (onlyframe == false && !category.toLowerCase().equalsIgnoreCase("lens")
+                                   && !category.toLowerCase().equalsIgnoreCase("sun glass")) {
+                            boolean found = false;
+                            for (GlassType type : glassTypes) {
+
+                                   if (type.getGlass_name().toLowerCase().equalsIgnoreCase(glassType)) {
+                                          found = true;
+                                   }
+                            }
+                            if (!found) {
+                                   return Code.INVALIDDATA;
+                            }
+                     }
+
+                     return Code.SUCCESS;
+
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return Code.ERROR_CODE;
        }
 
 }

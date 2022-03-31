@@ -99,4 +99,11 @@ public class Products {
         this.p_price = p_price;
     }
 
+    @Override
+    public String toString() {
+        return "Products [BannerImage=" + BannerImage + ", Rating=" + Rating + ", TotalSales=" + TotalSales + ", id="
+                + id + ", p_name=" + p_name + ", p_price=" + p_price + ", p_stock=" + p_stock + ", productDescription="
+                + productDescription + ", productSales=" + productSales + "]";
+    }
+
 }
