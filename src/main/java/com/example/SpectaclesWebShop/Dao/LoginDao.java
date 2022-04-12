@@ -6,12 +6,18 @@ import com.example.SpectaclesWebShop.DaoInterfaces.LoginInterface;
 import com.example.SpectaclesWebShop.Info.TableName;
 import com.example.SpectaclesWebShop.RawMapperImplement.LoginRaw.LoginRawMapperImple;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -30,7 +36,7 @@ public class LoginDao implements LoginInterface {
     public int createDataBase() {
         try {
             String query = "CREATE TABLE IF NOT EXISTS " + TableName.LOGIN_TABLE
-                    + " (ID INT AUTO_INCREMENT PRIMARY KEY,MAILID  VARCHAR(100) UNIQUE NOT NULL,NAME VARCHAR(100) NOT NULL,PASSWORD VARCHAR(300) NOT NULL,HASROLE VARCHAR(10) NOT NULL DEFAULT('user'));";
+                    + " (ID INT AUTO_INCREMENT PRIMARY KEY,MAILID  VARCHAR(100) UNIQUE NOT NULL,NAME VARCHAR(100) NOT NULL,PASSWORD VARCHAR(300) NOT NULL,HASROLE VARCHAR(10) NOT NULL DEFAULT('user'),JOINTIME DATETIME)";
             return jdbcTemplate.update(query);
         } catch (Exception e) {
             e.printStackTrace();
@@ -44,10 +50,15 @@ public class LoginDao implements LoginInterface {
         try {
 
             String query = "INSERT INTO " + TableName.LOGIN_TABLE
-                    + " (MAILID,NAME,PASSWORD,HASROLE) VALUES(?,?,?,?);";
+                    + " (MAILID,NAME,PASSWORD,HASROLE,JOINTIME) VALUES(?,?,?,?,?);";
+            Date date = new Date();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String currentDateTime = format.format(date);
             String password = bCryptPasswordEncoder.encode(l.getPassword());
-            return jdbcTemplate.update(query, l.getMailId(), l.getName(), password, l.getHasRole().toLowerCase());
+            return jdbcTemplate.update(query, l.getMailId(), l.getName(), password, l.getHasRole().toLowerCase(),currentDateTime);
 
+        } catch (DuplicateKeyException e) {
+            return Code.DUPLICATE_KEY;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -81,8 +92,21 @@ public class LoginDao implements LoginInterface {
     @Override
     public List<Login> getAllUser() {
         try {
-            String query = "SELECT * FROM " + TableName.LOGIN_TABLE;
-            RowMapper<Login> loginRowMapper = new LoginRawMapperImple();
+            String query = "SELECT ID,MAILID,NAME,JOINTIME FROM " + TableName.LOGIN_TABLE + " WHERE HASROLE='user'";
+            RowMapper<Login> loginRowMapper = new RowMapper<Login>() {
+
+                @Override
+                public Login mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    Login l = new Login();
+                    l.setId(rs.getLong("ID"));
+                    l.setMailId(rs.getString("MAILID"));
+                    l.setName(rs.getString("NAME"));
+                    l.setDateTime(rs.getObject("JOINTIME", LocalDateTime.class));
+
+                    return l;
+                }
+
+            };
             return jdbcTemplate.query(query, loginRowMapper);
         } catch (Exception e) {
             e.printStackTrace();

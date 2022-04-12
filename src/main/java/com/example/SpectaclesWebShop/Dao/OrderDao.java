@@ -8,6 +8,7 @@ import com.example.SpectaclesWebShop.Bean.OrderPayment;
 import com.example.SpectaclesWebShop.Bean.OrderedProducts;
 import com.example.SpectaclesWebShop.Bean.ProductDescription;
 import com.example.SpectaclesWebShop.Bean.Products;
+import com.example.SpectaclesWebShop.Bean.Service;
 import com.example.SpectaclesWebShop.DaoInterfaces.OrderInteface;
 
 import com.example.SpectaclesWebShop.Info.Code;
@@ -51,7 +52,7 @@ public class OrderDao implements OrderInteface {
               return "CREATE TABLE IF NOT EXISTS " + TableName.ORDER
                             + " (ORDER_ID INT AUTO_INCREMENT PRIMARY KEY,C_ID INT,ORDER_DATE DATETIME,SERVICE_ID INT,SHIPPING_CHARGES DOUBLE,ORDER_STATUS VARCHAR(50) DEFAULT('PLACED'),CONSTRAINT FOREIGN KEY(C_ID) REFERENCES "
                             + TableName.LOGIN_TABLE + " (ID),FOREIGN KEY(SERVICE_ID) REFERENCES "
-                            + TableName.ORDERSERVICE + " (ID))";
+                            + TableName.ORDERSERVICE + " (ID) ON UPDATE CASCADE)";
        }
 
        public String CreateOrderAddressTable() {
@@ -68,7 +69,7 @@ public class OrderDao implements OrderInteface {
                             + " (P_ID),CHECK(QTY!=0))";
        }
 
-       public String CreateOrderPaymentTabel() {
+       public String CreateOrderPaymentTable() {
               return "CREATE TABLE IF NOT EXISTS " + TableName.ORDERPAYMENT
                             + " (ID INT AUTO_INCREMENT PRIMARY KEY,ORDER_ID INT,PAYMENT_TYPE VARCHAR(100) NOT NULL,TOTAL_AMOUNT DOUBLE NOT NULL,TRANSACTION_ID VARCHAR(2000),PAYMENT_STATUS BOOLEAN DEFAULT(FALSE),CONSTRAINT FOREIGN KEY(ORDER_ID) REFERENCES "
                             + TableName.ORDER + " (ORDER_ID) ON DELETE CASCADE)";
@@ -81,7 +82,7 @@ public class OrderDao implements OrderInteface {
                      jdbcTemplate.update(CreateOrderTable());
                      jdbcTemplate.update(CreateOrderAddressTable());
                      jdbcTemplate.update(CreateOrderedProductTable());
-                     jdbcTemplate.update(CreateOrderPaymentTabel());
+                     jdbcTemplate.update(CreateOrderPaymentTable());
               } catch (Exception e) {
                      e.printStackTrace();
               }
@@ -109,11 +110,28 @@ public class OrderDao implements OrderInteface {
        @Override
        public int updateOrderDetails(Order order) {
               try {
+                     int result =0;
                      String query = "update " + TableName.ORDER
-                                   + " set SHIPPING_CHARGES=? ORDER_STATUS=? SERVICE_ID=? where ORDER_ID=?";
-                     return jdbcTemplate.update(query, order.getShipping_charges(), order.getOrder_status(),
-                                   order.getService_id(), order.getOrder_id());
+                                   + " set SHIPPING_CHARGES=?,ORDER_STATUS=? where ORDER_ID=?";
+                     String paymentQuery = "update "+TableName.ORDERPAYMENT+" set PAYMENT_STATUS=? where ORDER_ID=?";
+
+                    result += jdbcTemplate.update(query, order.getShipping_charges(), order.getOrder_status(),
+                                    order.getOrder_id());
+                    result+= jdbcTemplate.update(paymentQuery,order.getOrderPayment().isPayment_status(),order.getOrder_id());
+                    return result;
               } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return Code.ERROR_CODE;
+       }
+
+       @Override
+       public int updateOrderService(Order order) {
+              try{
+                     String query = "update " + TableName.ORDER
+                             + " set SERVICE_ID=? where ORDER_ID=?";
+                     return jdbcTemplate.update(query,order.getService_id(),order.getOrder_id());
+              }catch(Exception e){
                      e.printStackTrace();
               }
               return Code.ERROR_CODE;
@@ -227,9 +245,9 @@ public class OrderDao implements OrderInteface {
        }
 
        @Override
-       public int CancelOrder(long order_id) {
+       public int CancelOrder(long order_id)  {
               try {
-                     String query = "delete from " + TableName.ORDER + " where ORDER_ID=?";
+                     String query = "UPDATE "+TableName.ORDER+" SET ORDER_STATUS='CANCELED' WHERE ORDER_ID=?";
                      // Reset Stock and TotalSales
                      String query2 = "select QTY,P_ID FROM " + TableName.ORDEREDPRODUCTS + " WHERE ORDER_ID=?";
                      RowMapper<OrderedProducts> oMapper = new RowMapper<OrderedProducts>() {
@@ -256,7 +274,8 @@ public class OrderDao implements OrderInteface {
        @Override
        public List<Order> getCustomerOrders(long c_id) {
               try {
-                     String query = "SELECT * FROM " + TableName.ORDER + " WHERE C_ID = ? ORDER BY  ORDER_DATE DESC";
+                     String query = "SELECT * FROM " + TableName.ORDER + " WHERE C_ID = ? AND ORDER_STATUS!='CANCEL' ORDER BY ORDER_DATE DESC";
+
                      RowMapper<Order> mapper = new RowMapper<Order>() {
                             @Override
                             public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -280,7 +299,48 @@ public class OrderDao implements OrderInteface {
                             orders.get(i).setOrderedProducts(orderedProducts);
                             orders.get(i).setOrderPayment(orderPayment);
                      }
+
+
+
                      return orders;
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return null;
+       }
+
+       @Override
+       public List<Order> getCustomerCanceledOrders(long c_id) {
+              try {
+                     String cancelOrder  =  "SELECT * FROM " + TableName.ORDER + " WHERE C_ID = ? AND ORDER_STATUS='CANCELED' ORDER BY ORDER_DATE DESC";
+                     RowMapper<Order> mapper = new RowMapper<Order>() {
+                            @Override
+                            public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
+                                   Order order = new Order();
+                                   order.setOrder_id(rs.getLong("ORDER_ID"));
+                                   order.setC_id(rs.getLong("C_ID"));
+                                   order.setOrder_status(rs.getString("ORDER_STATUS"));
+                                   order.setLocalDateTime(rs.getObject("ORDER_DATE", LocalDateTime.class));
+                                   order.setShipping_charges(rs.getDouble("SHIPPING_CHARGES"));
+                                   return order;
+                            }
+                     };
+                     List<Order> orders = jdbcTemplate.query(cancelOrder, mapper, c_id);
+
+                     for (int i = 0; i < orders.size(); ++i) {
+                            long order_id = orders.get(i).getOrder_id();
+                            OrderAddress orderAddress = getOrderAddress(order_id);
+                            List<OrderedProducts> orderedProducts = getOrderedProducts(order_id);
+                            OrderPayment orderPayment = getOrderPayment(order_id);
+                            orders.get(i).setOrderAddress(orderAddress);
+                            orders.get(i).setOrderedProducts(orderedProducts);
+                            orders.get(i).setOrderPayment(orderPayment);
+                     }
+
+
+
+                     return orders;
+
               } catch (Exception e) {
                      e.printStackTrace();
               }
@@ -441,6 +501,7 @@ public class OrderDao implements OrderInteface {
                                    Products products = new Products();
                                    ProductDescription productDescription = new ProductDescription();
 
+                                   orderedProducts.setP_id(rs.getLong("P_ID"));
                                    orderedProducts.setOnlyframe(rs.getBoolean("ONLYFRAME"));
                                    orderedProducts.setQty(rs.getInt("QTY"));
                                    orderedProducts.setGlassType(rs.getString("GLASSTYPE"));
@@ -451,6 +512,7 @@ public class OrderDao implements OrderInteface {
                                    orderedProducts.setOtherTax(rs.getDouble("OTHERTAX"));
                                    orderedProducts.setSale(rs.getDouble("SALE"));
                                    orderedProducts.setGlassPrice(rs.getDouble("GLASSPRICE"));
+
 
                                    products.setP_name(rs.getString("P_NAME"));
                                    products.setP_price(rs.getDouble("P_PRICE"));
@@ -547,6 +609,27 @@ public class OrderDao implements OrderInteface {
        }
 
        @Override
+       public boolean sendCancelOrder(long order_id,String cancellationReason) {
+              try {
+                     OrderAddress orderAddress = getOrderAddress(order_id);
+
+                     OrderPayment orderPayment = getOrderPayment(order_id);
+
+                     List<OrderedProducts> orderedProducts = getOrderedProducts(order_id);
+
+                     Order order = getOrder(order_id);
+
+                     Login login = loginDao.findById(order.getC_id());
+
+                     return emailService.sendCancelOrderMail(order, orderAddress, orderPayment, orderedProducts, login,cancellationReason);
+
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return false;
+       }
+
+       @Override
        public int CheckOrderedProductData(long p_id, int qty, String glassType, boolean onlyframe) {
               try {
                      String query = "SELECT P_STOCK,P_CATEGORY FROM " + TableName.PRODUCTS + " WHERE P_ID=?";
@@ -591,4 +674,110 @@ public class OrderDao implements OrderInteface {
               return Code.ERROR_CODE;
        }
 
+
+       public List<Order> getOrdersDetails(String query) {
+              try {
+
+                     RowMapper<Order> mapper = new RowMapper<Order>() {
+                            @Override
+                            public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
+                                   Order order = new Order();
+                                   order.setOrder_id(rs.getLong("ORDER_ID"));
+                                   order.setC_id(rs.getLong("C_ID"));
+                                   order.setOrder_status(rs.getString("ORDER_STATUS"));
+                                   order.setLocalDateTime(rs.getObject("ORDER_DATE", LocalDateTime.class));
+                                   order.setShipping_charges(rs.getDouble("SHIPPING_CHARGES"));
+
+                                   Service service = new Service(rs.getLong("ID"), rs.getString("SERVICE_PERSON"),
+                                                 rs.getString("PHONENUMBER"));
+                                   Login login = new Login();
+                                   login.setMailId(rs.getString("MAILID"));
+                                   login.setName(rs.getString("NAME"));
+                                   login.setId(rs.getLong("ID"));
+
+                                   order.setLogin(login);
+                                   order.setService(service);
+                                   return order;
+                            }
+                     };
+                     List<Order> orders = jdbcTemplate.query(query, mapper);
+
+                     for (int i = 0; i < orders.size(); ++i) {
+                            long order_id = orders.get(i).getOrder_id();
+                            OrderAddress orderAddress = getOrderAddress(order_id);
+                            List<OrderedProducts> orderedProducts = getOrderedProducts(order_id);
+                            OrderPayment orderPayment = getOrderPayment(order_id);
+                            orders.get(i).setOrderAddress(orderAddress);
+                            orders.get(i).setOrderedProducts(orderedProducts);
+                            orders.get(i).setOrderPayment(orderPayment);
+                     }
+                     return orders;
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return null;
+       }
+
+       @Override
+       public List<Order> getAllPlacedOrders() {
+              try{
+                     String placedQuery = "SELECT * FROM " + TableName.ORDER + " O LEFT JOIN " + TableName.ORDERSERVICE
+                             + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN (select ID,MAILID,NAME FROM "+TableName.LOGIN_TABLE+" ) L ON L.ID=O.C_ID WHERE ORDER_STATUS='PLACED'  ORDER BY  ORDER_DATE DESC ";
+
+                     return getOrdersDetails(placedQuery);
+              }catch (Exception e){
+                     e.printStackTrace();
+              }
+              return null;
+       }
+
+       @Override
+       public List<Order> getAllShippedOrders() {
+              try{
+                     String shippedQuery = "SELECT * FROM " + TableName.ORDER + " O LEFT JOIN " + TableName.ORDERSERVICE
+                             + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN (select ID,MAILID,NAME FROM "+TableName.LOGIN_TABLE+" ) L  ON L.ID=O.C_ID WHERE ORDER_STATUS='SHIPPED'  ORDER BY  ORDER_DATE DESC ";
+
+                     return getOrdersDetails(shippedQuery);
+              }catch (Exception e){
+                     e.printStackTrace();
+              }
+              return null;
+       }
+
+       @Override
+       public List<Order> getAllCanceledOrders() {
+              try{
+                     String shippedQuery = "SELECT * FROM " + TableName.ORDER + " O LEFT JOIN " + TableName.ORDERSERVICE
+                             + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN  (select ID,MAILID,NAME FROM "+TableName.LOGIN_TABLE+" ) L  ON L.ID=O.C_ID WHERE ORDER_STATUS='CANCELED'  ORDER BY  ORDER_DATE DESC ";
+
+                     return getOrdersDetails(shippedQuery);
+              }catch (Exception e){
+                     e.printStackTrace();
+              }
+              return null;
+       }
+
+       @Override
+       public List<Order> getAllDeliveredOrders() {
+              try{
+                     String deliveredQuery = "SELECT * FROM " + TableName.ORDER + " O LEFT JOIN " + TableName.ORDERSERVICE
+                             + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN  (select ID,MAILID,NAME FROM "+TableName.LOGIN_TABLE+" ) L  ON L.ID=O.C_ID WHERE ORDER_STATUS='DELIVERED'  ORDER BY  ORDER_DATE DESC ";
+
+                     return getOrdersDetails(deliveredQuery);
+              }catch (Exception e){
+                     e.printStackTrace();
+              }
+              return null;
+       }
+
+       @Override
+       public int deleteOrder(long id) {
+              try{
+                     String query = "DELETE FROM "+TableName.ORDER+" WHERE ORDER_ID=?";
+                     return jdbcTemplate.update(query,id);
+              }catch(Exception e){
+                     e.printStackTrace();
+              }
+              return Code.ERROR_CODE;
+       }
 }

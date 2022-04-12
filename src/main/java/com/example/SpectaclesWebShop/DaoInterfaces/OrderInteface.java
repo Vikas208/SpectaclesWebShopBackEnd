@@ -1,6 +1,5 @@
 package com.example.SpectaclesWebShop.DaoInterfaces;
 
-import com.example.SpectaclesWebShop.Bean.CustomersProductsDetails;
 import com.example.SpectaclesWebShop.Bean.Order;
 import com.example.SpectaclesWebShop.Bean.OrderAddress;
 import com.example.SpectaclesWebShop.Bean.OrderPayment;
@@ -17,6 +16,8 @@ public interface OrderInteface {
        public int createNewOrder(Order order);
 
        public int updateOrderDetails(Order order);
+
+       public int updateOrderService(Order order);
 
        public int addOrderAddress(OrderAddress orderAddress);
 
@@ -36,6 +37,8 @@ public interface OrderInteface {
 
        public List<Order> getCustomerOrders(long c_id);
 
+       public List<Order> getCustomerCanceledOrders(long c_id);
+
        public OrderAddress getOldAddress(long c_id);
 
        public List<HashMap<String, Object>> getOrderedDetails(long c_id);
@@ -43,7 +46,20 @@ public interface OrderInteface {
        public HashMap<String, Object> getOrderedProduct(long p_id, long qty, String glassType);
 
        public boolean sendInvoice(long order_id);
-
+       public boolean sendCancelOrder(long order_id,String cancellationReason);
        // Check Shop Now Product
        public int CheckOrderedProductData(long p_id, int qty, String glassType, boolean onlyframe);
+
+
+       //Placed Orders
+       public List<Order> getAllPlacedOrders();
+       //Shipped Orders
+       public List<Order> getAllShippedOrders();
+       //Canceled Orders
+       public List<Order> getAllCanceledOrders();
+       //Delivered Orders
+       public List<Order> getAllDeliveredOrders();
+
+       public int deleteOrder(long id);
+
 }

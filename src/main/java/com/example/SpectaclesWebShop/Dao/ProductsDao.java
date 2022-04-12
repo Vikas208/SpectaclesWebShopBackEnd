@@ -14,6 +14,7 @@ import com.example.SpectaclesWebShop.RawMapperImplement.ProductsRaw.ProductImage
 import com.example.SpectaclesWebShop.RawMapperImplement.ProductsRaw.ProductRawMapperImple;
 import com.example.SpectaclesWebShop.RawMapperImplement.ProductsRaw.ProductsRawImple;
 
+import com.example.SpectaclesWebShop.Service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -22,6 +23,9 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 @Repository
@@ -30,18 +34,23 @@ public class ProductsDao implements ProductsInterface {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    EmailService emailService;
+
     // Products DataBase
     public String createProductDatabase() {
         return "create table if not exists " + TableName.PRODUCTS
                 + " (P_ID int auto_increment primary key,P_NAME varchar(100) NOT NULL,P_DESCRIPTION varchar(2000),P_PRICE double NOT NULL,P_CATEGORY varchar(50) NOT NULL,P_GROUP VARCHAR(6) NOT NULL,P_FRAMESTYLE VARCHAR(50) NOT NULL,FRAMESIZE VARCHAR(45) NOT NULL,COLOR VARCHAR(45) NOT NULL,COMPANY_NAME VARCHAR(50) NOT NULL,WARRANTY VARCHAR(20) DEFAULT('0 YEAR'),GUARANTY VARCHAR(20) DEFAULT('0 YEAR'),BANNER_IMAGE VARCHAR(2000) NOT NULL,P_STOCK INT NOT NULL DEFAULT (0),TOTALSALES INT DEFAULT (0),CONSTRAINT FOREIGN KEY (P_CATEGORY) REFERENCES "
-                + TableName.CATEGORY + " (CATEGORYNAME) ,FOREIGN KEY (P_FRAMESTYLE) REFERENCES " + TableName.FRAME_STYLE
-                + " (FRAMENAME), FOREIGN KEY (COMPANY_NAME) REFERENCES " + TableName.COMPANY_NAME + " (COMPANY_NAME));";
+                + TableName.CATEGORY + " (CATEGORYNAME) ON UPDATE CASCADE ,FOREIGN KEY (P_FRAMESTYLE) REFERENCES "
+                + TableName.FRAME_STYLE
+                + " (FRAMENAME) ON UPDATE CASCADE , FOREIGN KEY (COMPANY_NAME) REFERENCES " + TableName.COMPANY_NAME
+                + " (COMPANY_NAME) ON UPDATE CASCADE);";
     }
 
     // Reviews DataBase
     public String createReviewDatabase() {
         return "CREATE table if not exists " + TableName.REVIEWS
-                + " (PR_ID INT auto_increment primary key,P_ID INT,C_ID INT ,RATING double NOT NULL default(0),FEEDBACK VARCHAR(1000),CONSTRAINT FOREIGN KEY (P_ID) REFERENCES "
+                + " (PR_ID INT auto_increment primary key,P_ID INT,C_ID INT ,RATING double NOT NULL default(0),FEEDBACK VARCHAR(1000),REVIEW_TIME DATETIME,CONSTRAINT FOREIGN KEY (P_ID) REFERENCES "
                 + TableName.PRODUCTS + "(P_ID) ON DELETE CASCADE,FOREIGN KEY (C_ID) REFERENCES " + TableName.LOGIN_TABLE
                 + "(ID) ON DELETE CASCADE);";
     }
@@ -148,6 +157,49 @@ public class ProductsDao implements ProductsInterface {
     }
 
     @Override
+    public int deleteProductReviews(long id,String reason) {
+        try {
+            String query = "select distinct * from " + TableName.REVIEWS + " PR LEFT JOIN (SELECT ID,MAILID FROM "
+                    + TableName.LOGIN_TABLE + ") L ON PR.C_ID = L.ID LEFT JOIN (SELECT P_ID,P_NAME FROM "+TableName.PRODUCTS+") P ON P.P_ID=PR.P_ID where PR.PR_ID = ?;";
+
+            String deleteQuery = "delete from " + TableName.REVIEWS + " where PR_ID=?";
+
+            RowMapper<HashMap<String,Object>> feedbacks = new RowMapper<HashMap<String,Object>>() {
+                @Override
+                public HashMap<String, Object> mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    FeedBack feedBack = new FeedBack();
+                    feedBack.setId(rs.getLong("PR_ID"));
+                    feedBack.setP_id(rs.getLong("P_ID"));
+                    feedBack.setC_id(rs.getLong("C_ID"));
+                    feedBack.setUser(rs.getString("MAILID"));
+                    feedBack.setRating(rs.getDouble("RATING"));
+                    feedBack.setFeedBack(rs.getString("FEEDBACK"));
+                    feedBack.setTime(rs.getObject("REVIEW_TIME", LocalDateTime.class));
+
+                    Products products = new Products();
+                    products.setId(rs.getLong("P_ID"));
+                    products.setP_name(rs.getString("P_NAME"));
+
+                    HashMap<String,Object> objectHashMap = new HashMap<String,Object>();
+                    objectHashMap.put("product",products);
+                    objectHashMap.put("feedBack",feedBack);
+
+                    return objectHashMap;
+                }
+            };
+            HashMap<String, Object> feedBack = jdbcTemplate.queryForObject(query,feedbacks,id);
+
+            if(emailService.sendDeleteReviews(feedBack,reason)){
+                return jdbcTemplate.update(deleteQuery, id);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
     public List<ProductImage> getProductImage(long p_id) {
         try {
             String query = "SELECT * FROM " + TableName.PRODUCT_IMAGE + " WHERE P_ID = ?";
@@ -162,13 +214,19 @@ public class ProductsDao implements ProductsInterface {
     @Override
     public int saveFeedback(FeedBack feedback) {
         try {
-            String query = "UPDATE " + TableName.REVIEWS + " SET RATING=?,FEEDBACK=? WHERE P_ID=? AND C_ID=?";
-            int result = jdbcTemplate.update(query, feedback.getRating(), feedback.getFeedBack(), feedback.getP_id(),
+            Date date = new Date();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String currentDateTime = format.format(date);
+            String query = "UPDATE " + TableName.REVIEWS
+                    + " SET RATING=?,FEEDBACK=?,REVIEW_TIME=? WHERE P_ID=? AND C_ID=?";
+            int result = jdbcTemplate.update(query, feedback.getRating(), feedback.getFeedBack(), currentDateTime,
+                    feedback.getP_id(),
                     feedback.getC_id());
             if (result == 0) {
-                query = "INSERT INTO " + TableName.REVIEWS + " (P_ID,C_ID,RATING,FEEDBACK) VALUES(?,?,?,?)";
+                query = "INSERT INTO " + TableName.REVIEWS
+                        + " (P_ID,C_ID,RATING,FEEDBACK,REVIEW_TIME) VALUES(?,?,?,?,?)";
                 return jdbcTemplate.update(query, feedback.getP_id(), feedback.getC_id(), feedback.getRating(),
-                        feedback.getFeedBack());
+                        feedback.getFeedBack(), currentDateTime);
             }
             return result;
         } catch (Exception e) {

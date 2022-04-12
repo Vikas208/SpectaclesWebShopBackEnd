@@ -15,10 +15,11 @@ public class Order {
     private OrderPayment orderPayment;
     private List<OrderedProducts> orderedProducts;
     private Service service;
+    private Login login;
 
     public Order(long order_id, long c_id, long service_id, Double shipping_charges, String order_status,
             LocalDateTime localDateTime, OrderPayment orderPayment, OrderAddress orderAddress, Service service,
-            List<OrderedProducts> orderedProducts) {
+            List<OrderedProducts> orderedProducts,Login login) {
         this.order_id = order_id;
         this.c_id = c_id;
         this.service_id = service_id;
@@ -29,10 +30,19 @@ public class Order {
         this.orderPayment = orderPayment;
         this.service = service;
         this.orderedProducts = orderedProducts;
+        this.login = login;
     }
 
     public Order() {
 
+    }
+
+    public Login getLogin() {
+        return login;
+    }
+
+    public void setLogin(Login login) {
+        this.login = login;
     }
 
     public List<OrderedProducts> getOrderedProducts() {
@@ -113,5 +123,22 @@ public class Order {
 
     public void setOrder_status(String order_status) {
         this.order_status = order_status;
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "order_id=" + order_id +
+                ", c_id=" + c_id +
+                ", service_id=" + service_id +
+                ", shipping_charges=" + shipping_charges +
+                ", order_status='" + order_status + '\'' +
+                ", localDateTime=" + localDateTime +
+                ", orderAddress=" + orderAddress +
+                ", orderPayment=" + orderPayment +
+                ", orderedProducts=" + orderedProducts +
+                ", service=" + service +
+                ", login=" + login +
+                '}';
     }
 }

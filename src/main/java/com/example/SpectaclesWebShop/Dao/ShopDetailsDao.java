@@ -2,6 +2,7 @@ package com.example.SpectaclesWebShop.Dao;
 
 import com.example.SpectaclesWebShop.Bean.Carousel;
 import com.example.SpectaclesWebShop.Bean.GlassType;
+import com.example.SpectaclesWebShop.Bean.Service;
 import com.example.SpectaclesWebShop.Bean.ShippingCharge;
 import com.example.SpectaclesWebShop.Bean.ShopDetails;
 
@@ -11,6 +12,8 @@ import com.example.SpectaclesWebShop.DaoInterfaces.ShopDetailsInterface;
 import com.example.SpectaclesWebShop.RawMapperImplement.ShopDetailsRaw.CarouselRawMapperImple;
 import com.example.SpectaclesWebShop.RawMapperImplement.ShopDetailsRaw.ShopDetailsRawMapperImple;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.relational.core.sql.TableLike;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -50,7 +53,7 @@ public class ShopDetailsDao implements ShopDetailsInterface {
 
     private String CreateGlassPriceDataBase() {
         return "CREATE TABLE IF NOT EXISTS " + TableName.GLASSPRICE
-                + " (G_ID INT AUTO_INCREMENT PRIMARY KEY,GLASS_NAME VARCHAR(10) NOT NULL,PRICE DOUBLE NOT NULL)";
+                + " (G_ID INT AUTO_INCREMENT PRIMARY KEY,GLASS_NAME VARCHAR(50) NOT NULL UNIQUE,PRICE DOUBLE NOT NULL)";
     }
 
     // Category DataBase
@@ -111,7 +114,7 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     @Override
     public List<Carousel> getCarouselImages() {
         try {
-            String query = "SELECT IMAGE FROM " + TableName.CAROUSEL;
+            String query = "SELECT * FROM " + TableName.CAROUSEL;
             RowMapper<Carousel> carouselRowMapper = new CarouselRawMapperImple();
             return jdbcTemplate.query(query, carouselRowMapper);
         } catch (Exception e) {
@@ -176,12 +179,35 @@ public class ShopDetailsDao implements ShopDetailsInterface {
             return jdbcTemplate.update(query, shopDetails.getShopName(), shopDetails.getAddress().getAddress(),
                     shopDetails.getAddress().getCity(), shopDetails.getAddress().getState(),
                     shopDetails.getAddress().getPinCode(),
-                    shopDetails.getPhoneNumber(), shopDetails.getMailId());
+                    shopDetails.getPhoneNumber(), shopDetails.getMailId(), shopDetails.getLogoUrl());
 
         } catch (Exception e) {
             e.printStackTrace();
         }
         return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int updateMailId(ShopDetails shopDetails) {
+        try {
+            String query = "UPDATE " + TableName.SHOP_DETAILS + " SET MAIL_ID=?";
+            return jdbcTemplate.update(query, shopDetails.getMailId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int updatePhonumber(ShopDetails shopDetails) {
+        try {
+            String query = "UPDATE " + TableName.SHOP_DETAILS + " SET PHONE_NUMBER=?";
+            return jdbcTemplate.update(query, shopDetails.getPhoneNumber());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+
     }
 
     @Override
@@ -205,6 +231,8 @@ public class ShopDetailsDao implements ShopDetailsInterface {
         try {
             String query = "INSERT INTO " + TableName.GLASSPRICE + " (GLASS_NAME,PRICE) VALUES(?,?)";
             return jdbcTemplate.update(query, glassType.getGlass_name(), glassType.getPrice());
+        } catch (DuplicateKeyException e) {
+            return Code.DUPLICATE_KEY;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -238,7 +266,9 @@ public class ShopDetailsDao implements ShopDetailsInterface {
         try {
             String query = "UPDATE " + TableName.GLASSPRICE + " SET GLASS_NAME=?,PRICE=? WHERE G_ID=?";
             return jdbcTemplate.update(query, glassType.getGlass_name(), glassType.getPrice(), glassType.getId());
-        } catch (Exception e) {
+        }
+
+        catch (Exception e) {
             e.printStackTrace();
         }
         return Code.ERROR_CODE;
@@ -247,6 +277,7 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     @Override
     public int addCategory(HashMap<String, Object> category) {
         try {
+            System.out.println(category.toString());
             String query = "INSERT INTO " + TableName.CATEGORY + " (CATEGORYNAME) VALUES(?)";
             return jdbcTemplate.update(query, category.get("data"));
         } catch (Exception e) {
@@ -282,6 +313,8 @@ public class ShopDetailsDao implements ShopDetailsInterface {
         try {
             String query = "DELETE FROM " + TableName.CATEGORY + " WHERE CAT_ID=?";
             return jdbcTemplate.update(query, id);
+        } catch (DataIntegrityViolationException e) {
+            return Code.DATAINTEGRATION;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -293,6 +326,8 @@ public class ShopDetailsDao implements ShopDetailsInterface {
         try {
             String query = "DELETE FROM " + TableName.COMPANY_NAME + " WHERE COMPANY_ID=?";
             return jdbcTemplate.update(query, id);
+        } catch (DataIntegrityViolationException e) {
+            return Code.DATAINTEGRATION;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -304,6 +339,8 @@ public class ShopDetailsDao implements ShopDetailsInterface {
         try {
             String query = "DELETE FROM " + TableName.FRAME_STYLE + " WHERE FRAME_ID=?";
             return jdbcTemplate.update(query, id);
+        } catch (DataIntegrityViolationException e) {
+            return Code.DATAINTEGRATION;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -313,8 +350,11 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     @Override
     public int updateCategory(HashMap<String, Object> category) {
         try {
+            System.out.println(category);
             String query = "UPDATE " + TableName.CATEGORY + " SET CATEGORYNAME=? WHERE CAT_ID=?";
             return jdbcTemplate.update(query, category.get("data"), category.get("id"));
+        } catch (DataIntegrityViolationException e) {
+            return Code.DATAINTEGRATION;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -326,6 +366,8 @@ public class ShopDetailsDao implements ShopDetailsInterface {
         try {
             String query = "UPDATE " + TableName.COMPANY_NAME + " SET COMPANY_NAME=? WHERE COMPANY_ID=?";
             return jdbcTemplate.update(query, companyName.get("data"), companyName.get("id"));
+        } catch (DataIntegrityViolationException e) {
+            return Code.DATAINTEGRATION;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -335,12 +377,70 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     @Override
     public int updateFrameStyle(HashMap<String, Object> frameStyle) {
         try {
-            String query = "UPDATE " + TableName.COMPANY_NAME + " SET FRAMENAME=? WHERE FRAME_ID=?";
+
+            String query = "UPDATE " + TableName.FRAME_STYLE + " SET FRAMENAME=? WHERE FRAME_ID=?";
             return jdbcTemplate.update(query, frameStyle.get("data"), frameStyle.get("id"));
+        } catch (DataIntegrityViolationException e) {
+            return Code.DATAINTEGRATION;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int addServiceDetails(Service service) {
+        try {
+            String query = "INSERT INTO " + TableName.ORDERSERVICE + " (SERVICE_PERSON,PHONENUMBER) VALUES (?,?)";
+            return jdbcTemplate.update(query, service.getName(), service.getPhonenumber());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int deleteServiceDetails(long id) {
+        try {
+            String query = "DELETE FROM " + TableName.ORDERSERVICE + " WHERE ID=?";
+            return jdbcTemplate.update(query, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int updateServiceDetails(Service service) {
+        try {
+            String query = "UPDATE " + TableName.ORDERSERVICE + " SET SERVICE_PERSON=?,PHONENUMBER=? WHERE ID=?";
+            return jdbcTemplate.update(query, service.getName(), service.getPhonenumber(), service.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+
+    }
+
+    @Override
+    public List<Service> getServiceDetials() {
+        try {
+            String query = "SELECT * FROM " + TableName.ORDERSERVICE;
+            RowMapper<Service> sMapper = new RowMapper<Service>() {
+
+                @Override
+                public Service mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return new Service(rs.getLong("Id"), rs.getString("SERVICE_PERSON"),
+                            rs.getString("PHONENUMBER"));
+
+                }
+
+            };
+            return jdbcTemplate.query(query, sMapper);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

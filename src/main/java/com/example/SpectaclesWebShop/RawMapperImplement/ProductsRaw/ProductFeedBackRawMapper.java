@@ -2,6 +2,7 @@ package com.example.SpectaclesWebShop.RawMapperImplement.ProductsRaw;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 import com.example.SpectaclesWebShop.Bean.FeedBack;
 
@@ -18,6 +19,7 @@ public class ProductFeedBackRawMapper implements RowMapper<FeedBack> {
               feedBack.setUser(rs.getString("MAILID"));
               feedBack.setRating(rs.getDouble("RATING"));
               feedBack.setFeedBack(rs.getString("FEEDBACK"));
+              feedBack.setTime(rs.getObject("REVIEW_TIME", LocalDateTime.class));
               return feedBack;
        }
 

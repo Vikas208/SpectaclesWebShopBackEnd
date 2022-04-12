@@ -6,6 +6,7 @@ import java.util.List;
 import com.example.SpectaclesWebShop.Bean.Carousel;
 import com.example.SpectaclesWebShop.Bean.GlassType;
 import com.example.SpectaclesWebShop.Bean.Login;
+import com.example.SpectaclesWebShop.Bean.Service;
 import com.example.SpectaclesWebShop.Bean.ShippingCharge;
 import com.example.SpectaclesWebShop.Bean.ShopDetails;
 import com.example.SpectaclesWebShop.Dao.LoginDao;
@@ -79,6 +80,17 @@ public class LoadDetailsController {
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @GetMapping("/getAllUsers")
+    public ResponseEntity<?> getAllUser() {
+        try {
+            List<Login> logins = loginDao.getAllUser();
+            return ResponseEntity.ok(logins);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @GetMapping("/load/carousel")
     public ResponseEntity<?> getCarousel() {
         try {
@@ -126,6 +138,25 @@ public class LoadDetailsController {
         return (ResponseEntity<?>) ResponseEntity.internalServerError();
     }
 
+    @PutMapping("/updateShopContactDetails")
+    public ResponseEntity<?> updateShopContactDetails(@RequestParam("contact") String contact,
+            @RequestBody ShopDetails shopDetails) {
+        try {
+            int result = Code.ERROR_CODE;
+            if (contact.equalsIgnoreCase("mail")) {
+                result = shopDetailsDao.updateMailId(shopDetails);
+            } else if (contact.equalsIgnoreCase("phone")) {
+                result = shopDetailsDao.updatePhonumber(shopDetails);
+            }
+            if (result != Code.ERROR_CODE) {
+                return ResponseEntity.ok(result);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
     @PutMapping("/updateGlassDetails")
     public ResponseEntity<?> updateGlassDetails(@RequestBody GlassType glassType) {
 
@@ -157,6 +188,10 @@ public class LoadDetailsController {
                     break;
 
             }
+            if (result == Code.DATAINTEGRATION) {
+                return ResponseEntity.status(403)
+                        .body(new ServerResponse("Some Product Are Use This Infomation So You Can't Modify It", false));
+            }
             if (result != Code.ERROR_CODE) {
                 return ResponseEntity.ok(result);
             }
@@ -181,6 +216,10 @@ public class LoadDetailsController {
                     result = shopDetailsDao.deleteCompanyName(id);
                     break;
 
+            }
+            if (result == Code.DATAINTEGRATION) {
+                return ResponseEntity.status(403)
+                        .body(new ServerResponse("Some Product Are Use This Infomation So You Can't Modify It", false));
             }
             if (result != Code.ERROR_CODE) {
                 return ResponseEntity.ok(result);
@@ -247,6 +286,9 @@ public class LoadDetailsController {
 
         try {
             int result = shopDetailsDao.addGlassType(glassType);
+            if (result == Code.DUPLICATE_KEY) {
+                return ResponseEntity.status(403).body(new ServerResponse("Glass Type is Exists", false));
+            }
             if (result != Code.ERROR_CODE) {
                 return ResponseEntity.ok(result);
             }
@@ -264,6 +306,56 @@ public class LoadDetailsController {
             if (result != Code.ERROR_CODE) {
                 return ResponseEntity.ok(result);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @PostMapping("/addServiceDetails")
+    public ResponseEntity<?> addServiceDetails(@RequestBody Service service) {
+        try {
+            int result = shopDetailsDao.addServiceDetails(service);
+            if (result != Code.ERROR_CODE) {
+                return ResponseEntity.ok(result);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @PutMapping("/updateServiceDetails")
+    public ResponseEntity<?> updateServiceDetails(@RequestBody Service service) {
+        try {
+            int result = shopDetailsDao.updateServiceDetails(service);
+            if (result != Code.ERROR_CODE) {
+                return ResponseEntity.ok(result);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @DeleteMapping("/deleteServiceDetails")
+    public ResponseEntity<?> deleteServiceDetails(@RequestParam("id") long id) {
+        try {
+            int result = shopDetailsDao.deleteServiceDetails(id);
+            if (result != Code.ERROR_CODE) {
+                return ResponseEntity.ok(result);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @GetMapping("/getServiceDetails")
+    public ResponseEntity<?> getServiceDetails() {
+        try {
+            List<Service> services = shopDetailsDao.getServiceDetials();
+            return ResponseEntity.ok(services);
         } catch (Exception e) {
             e.printStackTrace();
         }

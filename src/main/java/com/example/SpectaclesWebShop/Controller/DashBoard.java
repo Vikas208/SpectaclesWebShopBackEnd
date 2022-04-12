@@ -27,8 +27,20 @@ public class DashBoard {
                      data.put("basicData", basicData);
                      data.put("chartData", chartData);
 
+
                      return ResponseEntity.ok(data);
               } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return (ResponseEntity<?>) ResponseEntity.internalServerError();
+       }
+       @GetMapping("/notifications")
+       public ResponseEntity<?> getNotifications(){
+              try {
+                     HashMap<String,Object> notification = dashBoardDao.getNotification();
+
+                     return ResponseEntity.ok(notification);
+              }catch (Exception e){
                      e.printStackTrace();
               }
               return (ResponseEntity<?>) ResponseEntity.internalServerError();

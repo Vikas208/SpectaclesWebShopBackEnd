@@ -40,6 +40,7 @@ public class OrderController {
        @PutMapping("/updateOrderDetails")
        public ResponseEntity<?> updateOrderDetails(@RequestBody Order order) {
               try {
+
                      int result = orderDao.updateOrderDetails(order);
                      if (result != Code.ERROR_CODE) {
                             return ResponseEntity.ok(result);
@@ -49,8 +50,21 @@ public class OrderController {
               }
               return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
        }
+       @PutMapping("/updateOrderServiceDetails")
+       public ResponseEntity<?> updateOrderServiceDetails(@RequestBody Order order) {
+              try {
 
-       @DeleteMapping("/cancelOrder")
+                     int result = orderDao.updateOrderService(order);
+                     if (result != Code.ERROR_CODE) {
+                            return ResponseEntity.ok(result);
+                     }
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+       }
+
+       @PutMapping("/cancelOrder")
        public ResponseEntity<?> cancelOrder(@RequestParam("order_id") int order_id) {
               try {
                      int result = orderDao.CancelOrder(order_id);
@@ -188,6 +202,16 @@ public class OrderController {
               }
               return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
        }
+       @PostMapping("/sendCancelOrder")
+       public ResponseEntity<?> sendCancelOrder(@RequestParam("order") long order_id,@RequestParam("cancellation") String cancellation) {
+              try {
+                     boolean result = orderDao.sendCancelOrder(order_id,cancellation);
+                     return ResponseEntity.ok(result);
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+       }
 
        @GetMapping("/getCustomerOrders")
        public ResponseEntity<?> getCustomerOrders(@RequestParam("userId") long user_id) {
@@ -198,6 +222,16 @@ public class OrderController {
                      e.printStackTrace();
               }
               return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+       }
+       @GetMapping("/getCustomerCancelOrders")
+       public ResponseEntity<?> getCustomerCancelOrders(@RequestParam("userId") long user_id){
+              try{
+                     List<Order> orders = orderDao.getCustomerCanceledOrders(user_id);
+                     return ResponseEntity.ok(orders);
+              }catch (Exception e){
+                     e.printStackTrace();
+              }
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
        }
 
        @GetMapping("/validateProductData")
@@ -223,4 +257,55 @@ public class OrderController {
 
        }
 
+       @GetMapping("/getAllPlacedOrders")
+       public ResponseEntity<?> getAllPlacedOrders(){
+              try{
+                     List<Order> orders = orderDao.getAllPlacedOrders();
+                     return ResponseEntity.ok(orders);
+              }catch (Exception e){
+                    e.printStackTrace();
+              }
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+       }
+       @GetMapping("/getAllShippedOrders")
+       public ResponseEntity<?> getAllShippedOrders(){
+              try{
+                     List<Order> orders = orderDao.getAllShippedOrders();
+                     return ResponseEntity.ok(orders);
+              }catch (Exception e){
+                     e.printStackTrace();
+              }
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+       }
+       @GetMapping("/getAllDeliveredOrders")
+       public ResponseEntity<?> getAllDeliveredOrders(){
+              try{
+                     List<Order> orders = orderDao.getAllDeliveredOrders();
+                     return ResponseEntity.ok(orders);
+              }catch (Exception e){
+                     e.printStackTrace();
+              }
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+       }
+       @GetMapping("/getAllCancelOrders")
+       public ResponseEntity<?> getAllCancelOrders(){
+              try{
+                     List<Order> orders = orderDao.getAllCanceledOrders();
+                     return ResponseEntity.ok(orders);
+              }catch (Exception e){
+                     e.printStackTrace();
+              }
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+       }
+
+       @DeleteMapping("/deleteOrder")
+       public ResponseEntity<?> deleteOrder(@RequestParam("id") long id){
+              try{
+                     int result = orderDao.deleteOrder(id);
+                     return ResponseEntity.ok(result);
+              }catch (Exception e){
+                     e.printStackTrace();
+              }
+              return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+       }
 }

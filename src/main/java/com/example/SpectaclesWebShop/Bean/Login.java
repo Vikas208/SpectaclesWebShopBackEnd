@@ -1,11 +1,15 @@
 package com.example.SpectaclesWebShop.Bean;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 public class Login {
     private long id;
     private String mailId;
     private String name;
     private String password;
     private String hasRole;
+    private LocalDateTime dateTime;
 
     // no user Found
     public Login() {
@@ -14,15 +18,17 @@ public class Login {
         this.name = null;
         this.password = null;
         this.hasRole = null;
+
     }
 
     // when Fetch Data
-    public Login(long id, String mailId, String name, String password,String hasRole) {
+    public Login(long id, String mailId, String name, String password,String hasRole,LocalDateTime dateTime) {
         this.id = id;
         this.mailId = mailId;
         this.name = name;
         this.password = password;
         this.hasRole = hasRole;
+        this.dateTime =dateTime;
     }
 
     // Fetch User Details
@@ -35,6 +41,14 @@ public class Login {
 
     public String getHasRole() {
         return hasRole;
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTime = dateTime;
     }
 
     public void setHasRole(String hasRole) {

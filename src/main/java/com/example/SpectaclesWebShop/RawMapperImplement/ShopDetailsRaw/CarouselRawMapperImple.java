@@ -10,7 +10,9 @@ public class CarouselRawMapperImple implements RowMapper<Carousel> {
     @Override
     public Carousel mapRow(ResultSet rs, int rowNum) throws SQLException {
         Carousel carousel = new Carousel();
-        carousel.setImages(rs.getString(1));
+        carousel.setId(rs.getLong(1));
+        carousel.setImages(rs.getString(2));
+
         return carousel;
     }
 }

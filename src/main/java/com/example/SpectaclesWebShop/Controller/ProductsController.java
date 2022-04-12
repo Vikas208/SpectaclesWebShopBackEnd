@@ -99,6 +99,20 @@ public class ProductsController {
         return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
     }
 
+    @DeleteMapping("/fetch/DeleteProductReviews")
+    public ResponseEntity<?> DeleteProductReviews(@RequestParam("id") long id,@RequestParam("reason") String reason) {
+        try {
+
+            int res = productsDao.deleteProductReviews(id,reason);
+            if (res != Code.ERROR_CODE) {
+                return ResponseEntity.ok(res);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResponseEntity.internalServerError().body(new ServerResponse("Internal Server Error", false));
+    }
+
     @GetMapping("/fetch/getProductImages")
     public ResponseEntity<?> GetProductImages(@RequestParam("productId") long p_id) {
         try {

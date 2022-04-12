@@ -2,6 +2,7 @@ package com.example.SpectaclesWebShop.DaoInterfaces;
 
 import com.example.SpectaclesWebShop.Bean.Carousel;
 import com.example.SpectaclesWebShop.Bean.GlassType;
+import com.example.SpectaclesWebShop.Bean.Service;
 import com.example.SpectaclesWebShop.Bean.ShippingCharge;
 import com.example.SpectaclesWebShop.Bean.ShopDetails;
 
@@ -20,6 +21,10 @@ public interface ShopDetailsInterface {
     List<GlassType> getGlassPricing();
 
     int updateShopDetails(ShopDetails shopDetails);
+
+    int updatePhonumber(ShopDetails shopDetails);
+
+    int updateMailId(ShopDetails shopDetails);
 
     int addCarouselImage(List<Carousel> carousels);
 
@@ -48,5 +53,13 @@ public interface ShopDetailsInterface {
     int updateCompanyName(HashMap<String, Object> companyName);
 
     int deleteCompanyName(long id);
+
+    int addServiceDetails(Service service);
+
+    int updateServiceDetails(Service service);
+
+    int deleteServiceDetails(long id);
+
+    List<Service> getServiceDetials();
 
 }

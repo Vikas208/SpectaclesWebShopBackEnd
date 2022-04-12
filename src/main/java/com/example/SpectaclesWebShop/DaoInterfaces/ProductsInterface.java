@@ -22,6 +22,8 @@ public interface ProductsInterface {
 
         public List<FeedBack> getProductReviews(long p_id);
 
+        public int deleteProductReviews(long id,String reason);
+
         public List<ProductImage> getProductImage(long p_id);
 
         public int saveFeedback(FeedBack feedBack);
