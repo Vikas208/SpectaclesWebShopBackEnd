@@ -3,12 +3,7 @@ package com.example.SpectaclesWebShop.Controller;
 import java.util.HashMap;
 import java.util.List;
 
-import com.example.SpectaclesWebShop.Bean.Carousel;
-import com.example.SpectaclesWebShop.Bean.GlassType;
-import com.example.SpectaclesWebShop.Bean.Login;
-import com.example.SpectaclesWebShop.Bean.Service;
-import com.example.SpectaclesWebShop.Bean.ShippingCharge;
-import com.example.SpectaclesWebShop.Bean.ShopDetails;
+import com.example.SpectaclesWebShop.Bean.*;
 import com.example.SpectaclesWebShop.Dao.LoginDao;
 import com.example.SpectaclesWebShop.Dao.ShopDetailsDao;
 import com.example.SpectaclesWebShop.Helper.JwtUtil;
@@ -172,7 +167,7 @@ public class LoadDetailsController {
     }
 
     @PutMapping("/updateData")
-    public ResponseEntity<?> updateData(@RequestBody HashMap<String, Object> data,
+    public ResponseEntity<?> updateData(@RequestBody Data data,
             @RequestParam(value = "type") String type) {
         try {
             int result = 0;
@@ -244,9 +239,9 @@ public class LoadDetailsController {
     }
 
     @DeleteMapping("deleteCarouselImage")
-    public ResponseEntity<?> deleteCarouselImage(@RequestParam("id") long id) {
+    public ResponseEntity<?> deleteCarouselImage(@RequestParam("id") long id,@RequestParam("filePath") String filePath) {
         try {
-            int result = shopDetailsDao.deleteCarouselImage(id);
+            int result = shopDetailsDao.deleteCarouselImage(id,filePath);
             if (result != Code.ERROR_CODE) {
                 return ResponseEntity.ok(result);
             }
@@ -257,7 +252,7 @@ public class LoadDetailsController {
     }
 
     @PostMapping("/addData")
-    public ResponseEntity<?> addData(@RequestBody HashMap<String, Object> data, @RequestParam("type") String type) {
+    public ResponseEntity<?> addData(@RequestBody Data data, @RequestParam("type") String type) {
         try {
             int result = 0;
             switch (type.toLowerCase()) {
@@ -354,8 +349,55 @@ public class LoadDetailsController {
     @GetMapping("/getServiceDetails")
     public ResponseEntity<?> getServiceDetails() {
         try {
-            List<Service> services = shopDetailsDao.getServiceDetials();
+            List<Service> services = shopDetailsDao.getServiceDetails();
             return ResponseEntity.ok(services);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @GetMapping("/getTaxData")
+    public ResponseEntity<?> getTaxData() {
+        try {
+            List<TaxData> taxData = shopDetailsDao.getTaxData();
+            return ResponseEntity.ok(taxData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @PutMapping("/updateTaxData")
+    public ResponseEntity<?> updateTaxData(@RequestBody TaxData taxData) {
+        try {
+            int result = shopDetailsDao.updateTaxData(taxData);
+            if (result != Code.ERROR_CODE)
+                return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @DeleteMapping("/deleteTaxData")
+    public ResponseEntity<?> deleteTaxData(@RequestParam("id") long id) {
+        try {
+            int result = shopDetailsDao.deleteTaxData(id);
+            if (result != Code.ERROR_CODE)
+                return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
+
+    @PostMapping("/addTaxData")
+    public ResponseEntity<?> addTaxData(@RequestBody TaxData data) {
+        try {
+            int result = shopDetailsDao.addTaxData(data);
+            if (result != Code.ERROR_CODE)
+                return ResponseEntity.ok(result);
         } catch (Exception e) {
             e.printStackTrace();
         }

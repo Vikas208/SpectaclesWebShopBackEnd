@@ -209,7 +209,7 @@ public class CustomerProductsDao implements CustomerProductsInterface {
        @Override
        public List<HashMap<String, Object>> getBillingInformation(long c_id) {
               try {
-                     String query = "select CC.C_ID,sum(CC.QTY * ((P.P_PRICE - IF(PS.E_DATE < CURRENT_DATE(),0,PS.OFF_AMOUNT) - (P.P_PRICE * IF(PS.E_DATE < CURRENT_DATE(),0,PS.PERCENTAGE) / 100) )+ IF(isnull(GP.GLASS_NAME),0,GP.PRICE)+ (P.P_PRICE * (IF(isnull(TD.GST),0,TD.GST)/100))+ (P.P_PRICE * IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100)))'PRICE' , sum(CC.QTY*P.P_PRICE * (IF(ISNULL(TD.GST),0,TD.GST)/100))'GST',sum(CC.QTY*P.P_PRICE * (IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100))'OTHER_TAX',sum(IF(isnull(GP.GLASS_NAME),0,GP.PRICE))'GLASSPRICE' from "
+                     String query = "select CC.C_ID,sum(CC.QTY * ((P.P_PRICE - IF(ifnull(PS.E_DATE,0) < CURRENT_DATE(),0,PS.OFF_AMOUNT) - (P.P_PRICE * IF(PS.E_DATE < CURRENT_DATE(),0,PS.PERCENTAGE) / 100) )+ IF(isnull(GP.GLASS_NAME),0,GP.PRICE)+ (P.P_PRICE * (IF(isnull(TD.GST),0,TD.GST)/100))+ (P.P_PRICE * IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100)))'PRICE' , sum(CC.QTY*P.P_PRICE * (IF(ISNULL(TD.GST),0,TD.GST)/100))'GST',sum(CC.QTY*P.P_PRICE * (IF(ISNULL(TD.OTHER_TAX),0,TD.OTHER_TAX)/100))'OTHER_TAX',sum(IF(isnull(GP.GLASS_NAME),0,GP.PRICE))'GLASSPRICE' from "
                                    + TableName.CUSTOMER_CART + " CC LEFT JOIN " + TableName.PRODUCTS
                                    + " P ON CC.P_ID=P.P_ID LEFT JOIN " + TableName.PRODUCT_SALES
                                    + " PS ON CC.P_ID = PS.P_ID LEFT JOIN " + TableName.GLASSPRICE
@@ -246,9 +246,7 @@ public class CustomerProductsDao implements CustomerProductsInterface {
        public int CheckAllProductData(long c_id) {
               try {
                      String query = "select ONLYFRAME,GLASSTYPE,P_CATEGORY,P_STOCK,QTY from CUSTOMER_CART CC LEFT JOIN PRODUCTS P ON CC.P_ID=P.P_ID WHERE CC.C_ID=?";
-
                      RowMapper<HashMap<String, Object>> productMapper = new RowMapper<HashMap<String, Object>>() {
-
                             @Override
                             public HashMap<String, Object> mapRow(ResultSet rs, int rowNum) throws SQLException {
                                    HashMap<String, Object> obj = new HashMap<String, Object>();
@@ -275,8 +273,8 @@ public class CustomerProductsDao implements CustomerProductsInterface {
 
                             if (qty > stock) {
                                    return Code.INVALIDDATA;
-                            } else if (onlyframe == false && !category.toLowerCase().equalsIgnoreCase("lens")
-                                          && !category.toLowerCase().equalsIgnoreCase("sun glass")) {
+                            } else if (!onlyframe && (!category.toLowerCase().equalsIgnoreCase("lens")
+                                          || !category.toLowerCase().equalsIgnoreCase("sun glass"))) {
                                    boolean found = false;
                                    for (GlassType type : glassTypes) {
 

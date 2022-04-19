@@ -1,27 +1,22 @@
 package com.example.SpectaclesWebShop.Dao;
 
-import com.example.SpectaclesWebShop.Bean.Carousel;
-import com.example.SpectaclesWebShop.Bean.GlassType;
-import com.example.SpectaclesWebShop.Bean.Service;
-import com.example.SpectaclesWebShop.Bean.ShippingCharge;
-import com.example.SpectaclesWebShop.Bean.ShopDetails;
+import com.example.SpectaclesWebShop.Bean.*;
 
 import com.example.SpectaclesWebShop.Info.Code;
 import com.example.SpectaclesWebShop.Info.TableName;
 import com.example.SpectaclesWebShop.DaoInterfaces.ShopDetailsInterface;
 import com.example.SpectaclesWebShop.RawMapperImplement.ShopDetailsRaw.CarouselRawMapperImple;
 import com.example.SpectaclesWebShop.RawMapperImplement.ShopDetailsRaw.ShopDetailsRawMapperImple;
+import com.example.SpectaclesWebShop.Service.CloudinaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.relational.core.sql.TableLike;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 
 @Repository
@@ -29,6 +24,8 @@ public class ShopDetailsDao implements ShopDetailsInterface {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
+    @Autowired
+    CloudinaryService cloudinaryService;
 
     private String CreateShopDetailsTable() {
         return "CREATE TABLE IF NOT EXISTS " + TableName.SHOP_DETAILS
@@ -48,7 +45,7 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     private String CreateTaxDataBase() {
         return "CREATE TABLE IF NOT EXISTS " + TableName.TAX_DATABASE
                 + " (ID INT AUTO_INCREMENT PRIMARY KEY,CATEGORY_NAME VARCHAR(50),GST DOUBLE DEFAULT(0),OTHER_TAX DOUBLE DEFAULT(0),CONSTRAINT FOREIGN KEY(CATEGORY_NAME) REFERENCES "
-                + TableName.CATEGORY + " (CATEGORYNAME))";
+                + TableName.CATEGORY + " (CATEGORYNAME) ON DELETE CASCADE ON UPDATE CASCADE)";
     }
 
     private String CreateGlassPriceDataBase() {
@@ -213,10 +210,9 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     @Override
     public int addCarouselImage(List<Carousel> carousels) {
         try {
+            String query = "INSERT INTO " + TableName.CAROUSEL + " (IMAGE) VALUES(?)";
             int result = 0;
             for (int i = 0; i < carousels.size(); i++) {
-
-                String query = "INSERT INTO " + TableName.CAROUSEL + " (IMAGE) VALUES(?)";
                 result += jdbcTemplate.update(query, carousels.get(i).getImages());
             }
             return result;
@@ -240,10 +236,13 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     }
 
     @Override
-    public int deleteCarouselImage(long id) {
+    public int deleteCarouselImage(long id,String filepath) {
         try {
             String query = "DELETE FROM " + TableName.CAROUSEL + " WHERE ID=?";
-            return jdbcTemplate.update(query, id);
+            int success = cloudinaryService.deleteImage(filepath);
+            if(success==Code.SUCCESS) {
+                return jdbcTemplate.update(query, id);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -275,11 +274,11 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     }
 
     @Override
-    public int addCategory(HashMap<String, Object> category) {
+    public int addCategory(Data category) {
         try {
             System.out.println(category.toString());
             String query = "INSERT INTO " + TableName.CATEGORY + " (CATEGORYNAME) VALUES(?)";
-            return jdbcTemplate.update(query, category.get("data"));
+            return jdbcTemplate.update(query, category.getData());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -287,10 +286,10 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     }
 
     @Override
-    public int addCompanyName(HashMap<String, Object> companyName) {
+    public int addCompanyName(Data companyName) {
         try {
             String query = "INSERT INTO " + TableName.COMPANY_NAME + " (COMPANY_NAME) VALUES(?)";
-            return jdbcTemplate.update(query, companyName.get("data"));
+            return jdbcTemplate.update(query, companyName.getData());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -298,10 +297,10 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     }
 
     @Override
-    public int addFrameStyle(HashMap<String, Object> frameStyle) {
+    public int addFrameStyle(Data frameStyle) {
         try {
             String query = "INSERT INTO " + TableName.FRAME_STYLE + " (FRAMENAME) VALUES(?)";
-            return jdbcTemplate.update(query, frameStyle.get("data"));
+            return jdbcTemplate.update(query, frameStyle.getData());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -348,11 +347,11 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     }
 
     @Override
-    public int updateCategory(HashMap<String, Object> category) {
+    public int updateCategory(Data category) {
         try {
             System.out.println(category);
             String query = "UPDATE " + TableName.CATEGORY + " SET CATEGORYNAME=? WHERE CAT_ID=?";
-            return jdbcTemplate.update(query, category.get("data"), category.get("id"));
+            return jdbcTemplate.update(query, category.getData(), category.getId());
         } catch (DataIntegrityViolationException e) {
             return Code.DATAINTEGRATION;
         } catch (Exception e) {
@@ -362,10 +361,10 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     }
 
     @Override
-    public int updateCompanyName(HashMap<String, Object> companyName) {
+    public int updateCompanyName(Data companyName) {
         try {
             String query = "UPDATE " + TableName.COMPANY_NAME + " SET COMPANY_NAME=? WHERE COMPANY_ID=?";
-            return jdbcTemplate.update(query, companyName.get("data"), companyName.get("id"));
+            return jdbcTemplate.update(query, companyName.getData(), companyName.getId());
         } catch (DataIntegrityViolationException e) {
             return Code.DATAINTEGRATION;
         } catch (Exception e) {
@@ -375,11 +374,11 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     }
 
     @Override
-    public int updateFrameStyle(HashMap<String, Object> frameStyle) {
+    public int updateFrameStyle(Data frameStyle) {
         try {
 
             String query = "UPDATE " + TableName.FRAME_STYLE + " SET FRAMENAME=? WHERE FRAME_ID=?";
-            return jdbcTemplate.update(query, frameStyle.get("data"), frameStyle.get("id"));
+            return jdbcTemplate.update(query, frameStyle.getData(), frameStyle.getId());
         } catch (DataIntegrityViolationException e) {
             return Code.DATAINTEGRATION;
         } catch (Exception e) {
@@ -423,7 +422,7 @@ public class ShopDetailsDao implements ShopDetailsInterface {
     }
 
     @Override
-    public List<Service> getServiceDetials() {
+    public List<Service> getServiceDetails() {
         try {
             String query = "SELECT * FROM " + TableName.ORDERSERVICE;
             RowMapper<Service> sMapper = new RowMapper<Service>() {
@@ -434,13 +433,63 @@ public class ShopDetailsDao implements ShopDetailsInterface {
                             rs.getString("PHONENUMBER"));
 
                 }
-
             };
             return jdbcTemplate.query(query, sMapper);
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public List<TaxData> getTaxData() {
+        try {
+            String query = "SELECT * FROM " + TableName.TAX_DATABASE;
+            RowMapper<TaxData> tMapper = new RowMapper<TaxData>() {
+                @Override
+                public TaxData mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return new TaxData(rs.getLong("ID"), rs.getString("CATEGORY_NAME"), rs.getDouble("GST"),
+                            rs.getDouble("OTHER_TAX"));
+                }
+            };
+            return jdbcTemplate.query(query, tMapper);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public int updateTaxData(TaxData data) {
+        try {
+            String query = "UPDATE " + TableName.TAX_DATABASE + " SET CATEGORY_NAME=?,GST=?,OTHER_TAX=? WHERE ID=?";
+            return jdbcTemplate.update(query, data.getCategoryName(), data.getGst(), data.getOtherTax(), data.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int deleteTaxData(long id) {
+        try {
+            String query = "DELETE FROM " + TableName.TAX_DATABASE + " WHERE ID=?";
+            return jdbcTemplate.update(query, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
+
+    @Override
+    public int addTaxData(TaxData data) {
+        try {
+            String query = "INSERT INTO " + TableName.TAX_DATABASE + " (CATEGORY_NAME,GST,OTHER_TAX) VALUES(?,?,?)";
+            return jdbcTemplate.update(query,data.getCategoryName(), data.getGst(), data.getOtherTax());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
     }
 
 }

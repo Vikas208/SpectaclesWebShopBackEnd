@@ -14,6 +14,7 @@ import com.example.SpectaclesWebShop.RawMapperImplement.ProductsRaw.ProductImage
 import com.example.SpectaclesWebShop.RawMapperImplement.ProductsRaw.ProductRawMapperImple;
 import com.example.SpectaclesWebShop.RawMapperImplement.ProductsRaw.ProductsRawImple;
 
+import com.example.SpectaclesWebShop.Service.CloudinaryService;
 import com.example.SpectaclesWebShop.Service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -37,6 +38,8 @@ public class ProductsDao implements ProductsInterface {
     @Autowired
     EmailService emailService;
 
+    @Autowired
+    CloudinaryService cloudinaryService;
     // Products DataBase
     public String createProductDatabase() {
         return "create table if not exists " + TableName.PRODUCTS
@@ -360,7 +363,7 @@ public class ProductsDao implements ProductsInterface {
     @Override
     public Products getOrderedProduct(long p_id) {
         try {
-            String query = "select P.P_ID,P_NAME,(P_PRICE - IF(PS.E_DATE<current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100))))'PRICE',BANNER_IMAGE,P_STOCK,P_CATEGORY from "
+            String query = "select P.P_ID,P_NAME,(P_PRICE - IF(ifnull(PS.E_DATE,0)<current_date(),0,PS.OFF_AMOUNT+(P_PRICE*(PS.PERCENTAGE/100))))'PRICE',BANNER_IMAGE,P_STOCK,P_CATEGORY from "
                     + TableName.PRODUCTS + " P LEFT JOIN (SELECT * FROM "
                     + TableName.PRODUCT_SALES + ") PS  ON P.P_ID = PS.P_ID WHERE P.P_ID=?";
 
@@ -572,14 +575,32 @@ public class ProductsDao implements ProductsInterface {
     }
 
     @Override
-    public int deleteProductCarouselImage(long id) {
+    public int deleteProductCarouselImage(long id,String filePath) {
         try {
             String query = "DELETE FROM " + TableName.PRODUCT_IMAGE + " WHERE PI_ID=?";
-            return jdbcTemplate.update(query, id);
+            int success = cloudinaryService.deleteImage(filePath);
+            if(success==Code.SUCCESS) {
+                return jdbcTemplate.update(query, id);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return Code.ERROR_CODE;
     }
 
+    @Override
+    public int addProductCarousel(List<ProductImage> productImages) {
+        try{
+            String query = "INSERT INTO "+TableName.PRODUCT_IMAGE+" (P_ID,IMAGE_URL) VALUES (?,?)";
+            int result =0;
+            for (ProductImage productImage:
+                 productImages) {
+                result+=jdbcTemplate.update(query,productImage.getP_id(),productImage.getImages());
+            }
+            return  result;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return Code.ERROR_CODE;
+    }
 }

@@ -1,12 +1,7 @@
 package com.example.SpectaclesWebShop.DaoInterfaces;
 
-import com.example.SpectaclesWebShop.Bean.Carousel;
-import com.example.SpectaclesWebShop.Bean.GlassType;
-import com.example.SpectaclesWebShop.Bean.Service;
-import com.example.SpectaclesWebShop.Bean.ShippingCharge;
-import com.example.SpectaclesWebShop.Bean.ShopDetails;
+import com.example.SpectaclesWebShop.Bean.*;
 
-import java.util.HashMap;
 import java.util.List;
 
 public interface ShopDetailsInterface {
@@ -28,7 +23,7 @@ public interface ShopDetailsInterface {
 
     int addCarouselImage(List<Carousel> carousels);
 
-    int deleteCarouselImage(long id);
+    int deleteCarouselImage(long id,String path);
 
     int addGlassType(GlassType glassType);
 
@@ -36,21 +31,21 @@ public interface ShopDetailsInterface {
 
     int updateGlassType(GlassType glassType);
 
-    int addCategory(HashMap<String, Object> category);
+    int addCategory(Data category);
 
-    int updateCategory(HashMap<String, Object> category);
+    int updateCategory(Data category);
 
     int deleteCategory(long id);
 
-    int addFrameStyle(HashMap<String, Object> frameStyle);
+    int addFrameStyle(Data frameStyle);
 
-    int updateFrameStyle(HashMap<String, Object> frameStyle);
+    int updateFrameStyle(Data frameStyle);
 
     int deleteFrameStyle(long id);
 
-    int addCompanyName(HashMap<String, Object> companyName);
+    int addCompanyName(Data companyName);
 
-    int updateCompanyName(HashMap<String, Object> companyName);
+    int updateCompanyName(Data companyName);
 
     int deleteCompanyName(long id);
 
@@ -60,6 +55,16 @@ public interface ShopDetailsInterface {
 
     int deleteServiceDetails(long id);
 
-    List<Service> getServiceDetials();
+    List<Service> getServiceDetails();
+
+    List<TaxData> getTaxData();
+
+    int updateTaxData(TaxData data);
+
+    int deleteTaxData(long id);
+
+    int addTaxData(TaxData data);
+
+
 
 }

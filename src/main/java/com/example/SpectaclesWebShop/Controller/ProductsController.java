@@ -307,9 +307,9 @@ public class ProductsController {
     }
 
     @DeleteMapping("/deleteProductImage")
-    public ResponseEntity<?> deleteProductImage(@RequestParam("id") long id) {
+    public ResponseEntity<?> deleteProductImage(@RequestParam("id") long id,@RequestParam("filePath") String filePath) {
         try {
-            int row = productsDao.deleteProductCarouselImage(id);
+            int row = productsDao.deleteProductCarouselImage(id,filePath);
             if (row != Code.ERROR_CODE)
                 return ResponseEntity.ok(row);
         } catch (Exception e) {
@@ -318,4 +318,17 @@ public class ProductsController {
         return (ResponseEntity<?>) ResponseEntity.internalServerError();
     }
 
+
+    @PostMapping("/addProductCarousel")
+    public ResponseEntity<?> addProductCarousel(@RequestBody List<ProductImage> productImage) {
+        try {
+            int row = productsDao.addProductCarousel(productImage);
+            if (row != Code.ERROR_CODE)
+                return ResponseEntity.ok(row);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ResponseEntity<?>) ResponseEntity.internalServerError();
+    }
 }
+

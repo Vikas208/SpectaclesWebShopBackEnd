@@ -1,11 +1,6 @@
 package com.example.SpectaclesWebShop.DaoInterfaces;
 
-import com.example.SpectaclesWebShop.Bean.Data;
-import com.example.SpectaclesWebShop.Bean.FeedBack;
-
-import com.example.SpectaclesWebShop.Bean.ProductImage;
-import com.example.SpectaclesWebShop.Bean.ProductSales;
-import com.example.SpectaclesWebShop.Bean.Products;
+import com.example.SpectaclesWebShop.Bean.*;
 
 import java.util.List;
 
@@ -60,8 +55,10 @@ public interface ProductsInterface {
 
         public int updateProductSale(ProductSales sales);
 
-        public int deleteProductCarouselImage(long id);
+        public int deleteProductCarouselImage(long id,String filePath);
 
         // admin
         public Products getEditProductDetails(long id);
+
+        int addProductCarousel(List<ProductImage> productImages);
 }
