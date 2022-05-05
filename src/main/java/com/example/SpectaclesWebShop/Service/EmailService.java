@@ -133,7 +133,7 @@ public class EmailService {
     }
 
     public boolean sendCancelOrderMail(Order order, OrderAddress orderAddress, OrderPayment orderPayment,
-                                       List<OrderedProducts> orderedProducts, Login userDetails, String cancelationReason) {
+            List<OrderedProducts> orderedProducts, Login userDetails, String cancelationReason) {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -143,7 +143,7 @@ public class EmailService {
             helper.setTo(userDetails.getMailId());
             helper.setSubject("#Order Cancel");
             StringBuilder body = getOrderDetailsBody(order, orderAddress, orderPayment, orderedProducts, userDetails);
-            body.append("<br />").append("<span style='color:red;'>CancellationReason: ").append(cancelationReason)
+            body.append("<br />").append("<span style='color:red;'>Cancellation Reason: ").append(cancelationReason)
                     .append("</span>");
             body.append("</body></html>");
             helper.setText(body.toString(), true);
@@ -166,9 +166,38 @@ public class EmailService {
             helper.setTo(feedBack1.getUser());
             helper.setSubject("#Review Delete");
             StringBuilder body = new StringBuilder();
-            body.append("<html><body>").append("<h3>Spectacles Web Shop</h3>").append("<p> Your ReView is Deleted From Our Site on Product ").append(products.getP_name()).append("</p>").append("<p>Your Review was").append(feedBack1.getFeedBack()).append("On Date: ").append(feedBack1.getTime()).append(".This was Delete For Following Reason: ").append(reason).append("</p>").append("</body></html>");
+            body.append("<html><body>").append("<h3>Spectacles Web Shop</h3>")
+                    .append("<p> Your ReView is Deleted From Our Site on Product ").append(products.getP_name())
+                    .append("</p>").append("<p>Your Review was").append(feedBack1.getFeedBack()).append("On Date: ")
+                    .append(feedBack1.getTime()).append(".This was Delete For Following Reason: ").append(reason)
+                    .append("</p>").append("</body></html>");
             helper.setText(body.toString());
             javaMailSender.send(message);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean sendOrderDeliveredMail(Order order, OrderAddress orderAddress, OrderPayment orderPayment,
+            List<OrderedProducts> orderedProducts, Login userDetails) {
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            String adminMailId = getAdminMailId();
+
+            helper.setFrom(adminMailId);
+            helper.setTo(userDetails.getMailId());
+            helper.setSubject("#Order Delivered");
+            StringBuilder body = getOrderDetailsBody(order, orderAddress, orderPayment, orderedProducts, userDetails);
+            body.append("<br />").append("<span>Order has been deliered</span>");
+            body.append("<br />").append("<span>Any query contact us via our mailId : ").append(adminMailId)
+                    .append("</span>");
+            body.append("</body></html>");
+            helper.setText(body.toString(), true);
+            javaMailSender.send(message);
+
             return true;
         } catch (Exception e) {
             e.printStackTrace();

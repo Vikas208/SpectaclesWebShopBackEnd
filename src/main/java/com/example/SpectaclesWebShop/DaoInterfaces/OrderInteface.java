@@ -46,18 +46,24 @@ public interface OrderInteface {
        public HashMap<String, Object> getOrderedProduct(long p_id, long qty, String glassType);
 
        public boolean sendInvoice(long order_id);
-       public boolean sendCancelOrder(long order_id,String cancellationReason);
+
+       public boolean sendCancelOrder(long order_id, String cancellationReason);
+
+       public boolean sendDeliveredOrder(long order_id);
+
        // Check Shop Now Product
        public int CheckOrderedProductData(long p_id, int qty, String glassType, boolean onlyframe);
 
-
-       //Placed Orders
+       // Placed Orders
        public List<Order> getAllPlacedOrders();
-       //Shipped Orders
+
+       // Shipped Orders
        public List<Order> getAllShippedOrders();
-       //Canceled Orders
+
+       // Canceled Orders
        public List<Order> getAllCanceledOrders();
-       //Delivered Orders
+
+       // Delivered Orders
        public List<Order> getAllDeliveredOrders();
 
        public int deleteOrder(long id);

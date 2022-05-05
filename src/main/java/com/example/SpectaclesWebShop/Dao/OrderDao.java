@@ -110,15 +110,21 @@ public class OrderDao implements OrderInteface {
        @Override
        public int updateOrderDetails(Order order) {
               try {
-                     int result =0;
+                     int result = 0;
                      String query = "update " + TableName.ORDER
                                    + " set SHIPPING_CHARGES=?,ORDER_STATUS=? where ORDER_ID=?";
-                     String paymentQuery = "update "+TableName.ORDERPAYMENT+" set PAYMENT_STATUS=? where ORDER_ID=?";
+                     String paymentQuery = "update " + TableName.ORDERPAYMENT
+                                   + " set PAYMENT_STATUS=? where ORDER_ID=?";
 
-                    result += jdbcTemplate.update(query, order.getShipping_charges(), order.getOrder_status(),
-                                    order.getOrder_id());
-                    result+= jdbcTemplate.update(paymentQuery,order.getOrderPayment().isPayment_status(),order.getOrder_id());
-                    return result;
+                     result += jdbcTemplate.update(query, order.getShipping_charges(), order.getOrder_status(),
+                                   order.getOrder_id());
+                     result += jdbcTemplate.update(paymentQuery, order.getOrderPayment().isPayment_status(),
+                                   order.getOrder_id());
+
+                     if (order.getOrder_status().equalsIgnoreCase("delivered")) {
+                            sendDeliveredOrder(order.getOrder_id());
+                     }
+                     return result;
               } catch (Exception e) {
                      e.printStackTrace();
               }
@@ -127,11 +133,11 @@ public class OrderDao implements OrderInteface {
 
        @Override
        public int updateOrderService(Order order) {
-              try{
+              try {
                      String query = "update " + TableName.ORDER
-                             + " set SERVICE_ID=? where ORDER_ID=?";
-                     return jdbcTemplate.update(query,order.getService_id(),order.getOrder_id());
-              }catch(Exception e){
+                                   + " set SERVICE_ID=? where ORDER_ID=?";
+                     return jdbcTemplate.update(query, order.getService_id(), order.getOrder_id());
+              } catch (Exception e) {
                      e.printStackTrace();
               }
               return Code.ERROR_CODE;
@@ -245,9 +251,9 @@ public class OrderDao implements OrderInteface {
        }
 
        @Override
-       public int CancelOrder(long order_id)  {
+       public int CancelOrder(long order_id) {
               try {
-                     String query = "UPDATE "+TableName.ORDER+" SET ORDER_STATUS='CANCELED' WHERE ORDER_ID=?";
+                     String query = "UPDATE " + TableName.ORDER + " SET ORDER_STATUS='CANCELED' WHERE ORDER_ID=?";
                      // Reset Stock and TotalSales
                      String query2 = "select QTY,P_ID FROM " + TableName.ORDEREDPRODUCTS + " WHERE ORDER_ID=?";
                      RowMapper<OrderedProducts> oMapper = new RowMapper<OrderedProducts>() {
@@ -274,7 +280,8 @@ public class OrderDao implements OrderInteface {
        @Override
        public List<Order> getCustomerOrders(long c_id) {
               try {
-                     String query = "SELECT * FROM " + TableName.ORDER + " WHERE C_ID = ? AND ORDER_STATUS!='CANCEL' ORDER BY ORDER_DATE DESC";
+                     String query = "SELECT * FROM " + TableName.ORDER
+                                   + " WHERE C_ID = ? AND ORDER_STATUS!='CANCEL' ORDER BY ORDER_DATE DESC";
 
                      RowMapper<Order> mapper = new RowMapper<Order>() {
                             @Override
@@ -300,8 +307,6 @@ public class OrderDao implements OrderInteface {
                             orders.get(i).setOrderPayment(orderPayment);
                      }
 
-
-
                      return orders;
               } catch (Exception e) {
                      e.printStackTrace();
@@ -312,7 +317,8 @@ public class OrderDao implements OrderInteface {
        @Override
        public List<Order> getCustomerCanceledOrders(long c_id) {
               try {
-                     String cancelOrder  =  "SELECT * FROM " + TableName.ORDER + " WHERE C_ID = ? AND ORDER_STATUS='CANCELED' ORDER BY ORDER_DATE DESC";
+                     String cancelOrder = "SELECT * FROM " + TableName.ORDER
+                                   + " WHERE C_ID = ? AND ORDER_STATUS='CANCELED' ORDER BY ORDER_DATE DESC";
                      RowMapper<Order> mapper = new RowMapper<Order>() {
                             @Override
                             public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -336,8 +342,6 @@ public class OrderDao implements OrderInteface {
                             orders.get(i).setOrderedProducts(orderedProducts);
                             orders.get(i).setOrderPayment(orderPayment);
                      }
-
-
 
                      return orders;
 
@@ -513,7 +517,6 @@ public class OrderDao implements OrderInteface {
                                    orderedProducts.setSale(rs.getDouble("SALE"));
                                    orderedProducts.setGlassPrice(rs.getDouble("GLASSPRICE"));
 
-
                                    products.setP_name(rs.getString("P_NAME"));
                                    products.setP_price(rs.getDouble("P_PRICE"));
                                    productDescription.setCompany_name(rs.getString("COMPANY_NAME"));
@@ -609,7 +612,7 @@ public class OrderDao implements OrderInteface {
        }
 
        @Override
-       public boolean sendCancelOrder(long order_id,String cancellationReason) {
+       public boolean sendDeliveredOrder(long order_id) {
               try {
                      OrderAddress orderAddress = getOrderAddress(order_id);
 
@@ -621,7 +624,30 @@ public class OrderDao implements OrderInteface {
 
                      Login login = loginDao.findById(order.getC_id());
 
-                     return emailService.sendCancelOrderMail(order, orderAddress, orderPayment, orderedProducts, login,cancellationReason);
+                     return emailService.sendOrderDeliveredMail(order, orderAddress, orderPayment, orderedProducts,
+                                   login);
+
+              } catch (Exception e) {
+                     e.printStackTrace();
+              }
+              return false;
+       }
+
+       @Override
+       public boolean sendCancelOrder(long order_id, String cancellationReason) {
+              try {
+                     OrderAddress orderAddress = getOrderAddress(order_id);
+
+                     OrderPayment orderPayment = getOrderPayment(order_id);
+
+                     List<OrderedProducts> orderedProducts = getOrderedProducts(order_id);
+
+                     Order order = getOrder(order_id);
+
+                     Login login = loginDao.findById(order.getC_id());
+
+                     return emailService.sendCancelOrderMail(order, orderAddress, orderPayment, orderedProducts, login,
+                                   cancellationReason);
 
               } catch (Exception e) {
                      e.printStackTrace();
@@ -653,7 +679,7 @@ public class OrderDao implements OrderInteface {
                      if (qty > stock) {
                             return Code.INVALIDDATA;
                      } else if (!onlyframe && (!category.toLowerCase().equalsIgnoreCase("lens")
-                                  ||  !category.toLowerCase().equalsIgnoreCase("sun glass"))) {
+                                   || !category.toLowerCase().equalsIgnoreCase("sun glass"))) {
                             boolean found = false;
                             for (GlassType type : glassTypes) {
                                    if (type.getGlass_name().toLowerCase().equalsIgnoreCase(glassType)) {
@@ -672,7 +698,6 @@ public class OrderDao implements OrderInteface {
               }
               return Code.ERROR_CODE;
        }
-
 
        public List<Order> getOrdersDetails(String query) {
               try {
@@ -719,12 +744,14 @@ public class OrderDao implements OrderInteface {
 
        @Override
        public List<Order> getAllPlacedOrders() {
-              try{
+              try {
                      String placedQuery = "SELECT * FROM " + TableName.ORDER + " O LEFT JOIN " + TableName.ORDERSERVICE
-                             + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN (select ID,MAILID,NAME FROM "+TableName.LOGIN_TABLE+" ) L ON L.ID=O.C_ID WHERE ORDER_STATUS='PLACED'  ORDER BY  ORDER_DATE DESC ";
+                                   + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN (select ID,MAILID,NAME FROM "
+                                   + TableName.LOGIN_TABLE
+                                   + " ) L ON L.ID=O.C_ID WHERE ORDER_STATUS='PLACED'  ORDER BY  ORDER_DATE DESC ";
 
                      return getOrdersDetails(placedQuery);
-              }catch (Exception e){
+              } catch (Exception e) {
                      e.printStackTrace();
               }
               return null;
@@ -732,12 +759,14 @@ public class OrderDao implements OrderInteface {
 
        @Override
        public List<Order> getAllShippedOrders() {
-              try{
+              try {
                      String shippedQuery = "SELECT * FROM " + TableName.ORDER + " O LEFT JOIN " + TableName.ORDERSERVICE
-                             + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN (select ID,MAILID,NAME FROM "+TableName.LOGIN_TABLE+" ) L  ON L.ID=O.C_ID WHERE ORDER_STATUS='SHIPPED'  ORDER BY  ORDER_DATE DESC ";
+                                   + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN (select ID,MAILID,NAME FROM "
+                                   + TableName.LOGIN_TABLE
+                                   + " ) L  ON L.ID=O.C_ID WHERE ORDER_STATUS='SHIPPED'  ORDER BY  ORDER_DATE DESC ";
 
                      return getOrdersDetails(shippedQuery);
-              }catch (Exception e){
+              } catch (Exception e) {
                      e.printStackTrace();
               }
               return null;
@@ -745,12 +774,14 @@ public class OrderDao implements OrderInteface {
 
        @Override
        public List<Order> getAllCanceledOrders() {
-              try{
+              try {
                      String shippedQuery = "SELECT * FROM " + TableName.ORDER + " O LEFT JOIN " + TableName.ORDERSERVICE
-                             + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN  (select ID,MAILID,NAME FROM "+TableName.LOGIN_TABLE+" ) L  ON L.ID=O.C_ID WHERE ORDER_STATUS='CANCELED'  ORDER BY  ORDER_DATE DESC ";
+                                   + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN  (select ID,MAILID,NAME FROM "
+                                   + TableName.LOGIN_TABLE
+                                   + " ) L  ON L.ID=O.C_ID WHERE ORDER_STATUS='CANCELED'  ORDER BY  ORDER_DATE DESC ";
 
                      return getOrdersDetails(shippedQuery);
-              }catch (Exception e){
+              } catch (Exception e) {
                      e.printStackTrace();
               }
               return null;
@@ -758,12 +789,15 @@ public class OrderDao implements OrderInteface {
 
        @Override
        public List<Order> getAllDeliveredOrders() {
-              try{
-                     String deliveredQuery = "SELECT * FROM " + TableName.ORDER + " O LEFT JOIN " + TableName.ORDERSERVICE
-                             + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN  (select ID,MAILID,NAME FROM "+TableName.LOGIN_TABLE+" ) L  ON L.ID=O.C_ID WHERE ORDER_STATUS='DELIVERED'  ORDER BY  ORDER_DATE DESC ";
+              try {
+                     String deliveredQuery = "SELECT * FROM " + TableName.ORDER + " O LEFT JOIN "
+                                   + TableName.ORDERSERVICE
+                                   + " OS ON OS.ID=O.SERVICE_ID LEFT JOIN  (select ID,MAILID,NAME FROM "
+                                   + TableName.LOGIN_TABLE
+                                   + " ) L  ON L.ID=O.C_ID WHERE ORDER_STATUS='DELIVERED'  ORDER BY  ORDER_DATE DESC ";
 
                      return getOrdersDetails(deliveredQuery);
-              }catch (Exception e){
+              } catch (Exception e) {
                      e.printStackTrace();
               }
               return null;
@@ -771,10 +805,10 @@ public class OrderDao implements OrderInteface {
 
        @Override
        public int deleteOrder(long id) {
-              try{
-                     String query = "DELETE FROM "+TableName.ORDER+" WHERE ORDER_ID=?";
-                     return jdbcTemplate.update(query,id);
-              }catch(Exception e){
+              try {
+                     String query = "DELETE FROM " + TableName.ORDER + " WHERE ORDER_ID=?";
+                     return jdbcTemplate.update(query, id);
+              } catch (Exception e) {
                      e.printStackTrace();
               }
               return Code.ERROR_CODE;
